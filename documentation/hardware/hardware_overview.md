@@ -29,7 +29,7 @@ As shown below, the GeiCar has several sensors and actuators connected to the va
 | Wheel position        | Nucleo          | 2      |           |
 | Steering wheel angle  | Nucleo          | 1      |
 | Battery level         | Nucleo          | 1      |
-| Lidar                 | Raspeberry Pi   | 1      | [RPLIDAR A2] (https://www.robotshop.com/eu/fr/scanner-laser-360-rplidar-a2m8.html)|
+| Lidar                 | Raspeberry Pi   | 1      | [RPLIDAR A2](https://www.robotshop.com/eu/fr/scanner-laser-360-rplidar-a2m8.html)|
 | Camera                | Raspeberry Pi   | 1      | [RPI 8MP](http://fr.farnell.com/raspberry-pi/rpi-8mp-camera-board/raspberry-pi-camera-board-v2/dp/2510728) |
 | Ultrasonic sensor     | Discovery       | 6      | []() |
 | IMU Gyroscope         | Discovery       | 1      | [L3GD20](https://www.st.com/en/evaluation-tools/stm32f3discovery.html) |
