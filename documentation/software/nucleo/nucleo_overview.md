@@ -5,9 +5,9 @@
 The Nucleo board controls the vehicle's engines and steering, as well as the battery level. The ports used to connect the board are described in the diagram below.
 
 | Port | Configuration | Remap | Description                         |
-|------|---------------|-------|-------------------------------------|
-|      |               | ADC1 channel |Battery Level |
-|      |               | ADC1 channel | Steering wheel angle |
+|------|---------------|-------|---------------------------------|
+|      |               | ADC1 channel |Battery Level             |
+|      |               | ADC1 channel | Steering wheel angle     |
 |      |               | CC Timer channel | Position of left motor |
 |      |               | CC Timer channel | Position of right motor |
 |      |               | PWM Timer channel | Control left motor |

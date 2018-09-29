@@ -91,9 +91,9 @@ sudo /sbin/ip link set can0 up type can bitrate 500000
 
 ***Data format***
 
-* motors order[int16 : 0] = motor left    : [-1000 : 1000] (mm/s)   
-* motors order[int16 : 1] = motor right   : [-1000 : 1000] (mm/s)   
-* direction order[int8 : 0] = direction motor  : [-100 : 100] (%)   
+* motors order[int16 : 0] = motor left    : [-100 , 100] (mm/s)   
+* motors order[int16 : 1] = motor right   : [-100 , 100] (mm/s)   
+* direction order[int8 : 0] = direction motor  : [-100 , 100] (%)   
 
 
 ## CAN Messages
