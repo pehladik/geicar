@@ -7,7 +7,20 @@ The CAN network provides communication between the various ECUs in the system. T
 
 ## CAN configuration
 
-The CAN bus is configured with a bitrate of **XXX**.
+The CAN bus is configured with a bitrate of 500 Kbit/s.
+
+### Clock Tree
+* APBH 24Mhz
+
+### CAN Configuration 
+
+CubeMX :
+
+* Prescaler 6 (for 4MhZ)
+* Time quantum (tq): 250ns
+* BS1: 7 tq
+* BS2 : 2 tq
+* SJW : 1 tq
 
 ### How to use the PICAN 2
 On the Raspberry Pi the CAN uses the shield **PICAN 2**. This shield is designed by **CopperhillTech**. The procedure to configure the PICAN 2 on a Raspbian is explained on the website of [CopperhillTech](https://copperhilltech.com/pican2-controller-area-network-can-interface-for-raspberry-pi/). Samples of C and python code are available on the web site as well as a set of programs to test the configuration (for example, *candump* monitors the traffic).
