@@ -45,6 +45,8 @@
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
+#include "wheels.h"
+
 
 /* USER CODE BEGIN Includes */
 
@@ -218,17 +220,19 @@ int main(void)
 		/*limitations  de preference 0.4 a 0.6 %             */	
 		/*limitations max 0.25 a 0.75 % +- 6V DC moyen moteur*/	
 			//pwmAV= 3200*0.4;
+		 wheels_set_speed(en_MARD, en_MARG, pwmD, pwmG);
 		
-		TIM1->CCR1=pwmG;
-		TIM1->CCR2=pwmD;
+		
+		/*TIM1->CCR1=pwmG;
+		TIM1->CCR2=pwmD;*/
 		TIM1->CCR3=pwmAV;
 		
 		/*        Enable moteurs        */
 		/* GPIO_PIN_SET : activation    */
 		/* GPIO_PIN_RESET : pont ouvert */
 			
-		HAL_GPIO_WritePin( GPIOC, GPIO_PIN_10, en_MARG); //PC10  AR_G
-		HAL_GPIO_WritePin( GPIOC, GPIO_PIN_11, en_MARD); //PC11  AR_D
+		/*HAL_GPIO_WritePin( GPIOC, GPIO_PIN_10, en_MARG); //PC10  AR_G
+		HAL_GPIO_WritePin( GPIOC, GPIO_PIN_11, en_MARD); //PC11  AR_D*/
 		HAL_GPIO_WritePin( GPIOC, GPIO_PIN_12, en_MAV);  //PC12  AV
 		
 		/* CAN */
@@ -239,10 +243,10 @@ int main(void)
 		data[2] = (ADCBUF[0] >> 8) & 0xFF; // Bat_mes
 		data[3] = ADCBUF[0] & 0xFF;
 		
-		data[4] = (VMG_mes >> 8) & 0xFF; // Bat_mes
+		data[4] = (VMG_mes >> 8) & 0xFF; // VMG_mes
 		data[5] = VMG_mes & 0xFF;
 		
-		data[6] = (VMD_mes >> 8) & 0xFF; // Bat_mes
+		data[6] = (VMD_mes >> 8) & 0xFF; // VMD_mes
 		data[7] = VMD_mes & 0xFF;
 		
 		CAN_Send(data, CAN_ID_MS);

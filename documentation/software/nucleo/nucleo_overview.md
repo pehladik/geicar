@@ -46,32 +46,34 @@ The full description of the port configuration is provided in the file [electron
 
 ## How to manage sensors and actuators
 
+All voltage measurements (battery, steering angle, current left rear motor, current right rear motor and current front motor)  are made in continuous mode by the ADC. The measurements are stored in a circular buffer in the DMA.
 
 ### Battery level
 
-The battery level is obtained by calling the function `u8 get_battery_level(void)`. The returned value is between 0 and 100 and represents the percentage of charge of the battery.
+The battery level is obtained by calling the function `u8 get_battery_level(void)`. 
 
-### Steering control
+### Steering angle
 
 The steering wheel angle is obtained by calling the function `s8 get_steering_angle(void)`. The value returned an estimate of the steering wheel angle in degrees.
 
 The steering wheel angle is set by calling the `void set_steering_angle(int angle)` function. The value `angle` must be between -45 and 45.
 
-### Motor control
+### Motor Commands
 
-The position of the wheels is obtained by calling the function `Wheel_Position_Type get_position(void)`. This function returns a structure containing the value in mm of the position of the left and right wheel since the initial position.
+All engines are speed controlled, even the steering wheel engine. 
 
-The speed of the wheels is obtained by calling the function `Wheel_Speed_Type get_wheel_speed(void)`. This function returns a structure containing the speed in m/s of the left and right wheels.
+The command of a motor is encoded by 8-bit data. The bit 7 is used to enadble or disable the motor and bits 6-0 are used to code the value of the command. The values are between 0 and 100 with 50 to stop the motor. To avoid problems some software thresholds were implemented.
 
-The motor control is done by calling the function `void set_motor(int left, int right)`.
+**Warning:** All motors operate in open loop.
 
-The values `left` and `right` must be between -100 and 100. **Warning:** this function does not provide any regulation. The motors operate in an open loop.
+The motor control of the wheels is done by calling the function `wheels_set_speed()`. This function is periodically called in the main file.
+
 
 ## How to use the CAN bus
 
-Sending a message on the CAN bus is done by calling the function `void CAN_wrMsg (CAN_msg *msg)`. 
+Sending a message on the CAN bus is done by calling the function `void CAN_Send (unint8_t* data, unint32_t id)`. 
 
-The reception of a message is done by calling the function `void CAN_rdMsg (CAN_msg *msg)`
+The reception of a message is done in the callback function of the CAN interruption `HAL_CAN_RxCpltCallback` in file `can.c`. Motor controls (wheel and steering) are shared via global variables. These variables are updated on receipt of the CAN message. The actuators are updated periodically in the main file.
 
 ## Scheduling
 
