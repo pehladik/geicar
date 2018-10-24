@@ -3,6 +3,8 @@
 #define MAX_SPEED_STEERING 60
 #define MIN_SPEED_STEERING 40 
 
+extern uint32_t ADCBUF[5];
+
 void steering_set_speed(GPIO_PinState en_steering, int speed){
 	
 		/* Threshold */
@@ -22,3 +24,8 @@ void steering_set_speed(GPIO_PinState en_steering, int speed){
 		/* GPIO_PIN_RESET : pont ouvert */
 		HAL_GPIO_WritePin( GPIOC, GPIO_PIN_12, en_steering);  //PC12  AV
 }
+
+int get_steering_angle(void){
+	return ADCBUF[1];
+}
+

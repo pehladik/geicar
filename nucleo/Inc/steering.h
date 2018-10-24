@@ -10,4 +10,9 @@
 **/
 void steering_set_speed(GPIO_PinState en_steering, int speed);
 
+/**
+* Return the steering angle.
+**/
+int get_steering_angle(void);
+
 #endif

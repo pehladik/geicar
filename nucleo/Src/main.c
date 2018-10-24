@@ -103,6 +103,16 @@ void SystemClock_Config(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
+	if (htim->Instance==TIM2)
+	{
+		VMG_mes = 0;
+	} else if (htim->Instance==TIM4){
+		VMD_mes = 0;
+	}
+}
+
+
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
 	/***               Mesures des vitesses moteurs                      ***
@@ -188,6 +198,8 @@ int main(void)
 	HAL_TIMEx_OCN_Start(&htim1,TIM_CHANNEL_2);
 	HAL_TIMEx_OCN_Start(&htim1,TIM_CHANNEL_3);
 	/*Vitesse*/
+	__HAL_TIM_ENABLE_IT(&htim2, TIM_IT_UPDATE);
+	__HAL_TIM_ENABLE_IT(&htim4, TIM_IT_UPDATE);
   HAL_TIM_IC_Start_IT (&htim2,TIM_CHANNEL_3);//autorisation IT capture CH3
   HAL_TIM_IC_Start_IT (&htim4,TIM_CHANNEL_3);//autorisation IT capture CH3
 
@@ -215,33 +227,6 @@ int main(void)
 			wheels_set_speed(en_MARD, en_MARG, cmdRRM, cmdLRM);
 			steering_set_speed(en_MAV, cmdSFM);
 		}
-
-		
-		/*                PWM moteurs                    */	
-		/* Tous moteurs : de preference ENABLE moteur = 0 a l'arret */
-		
-		// Moteurs arrieres 
-		/* > 50 % avance, < 50 % recule et 50 % arret    */	
-		/*limitations 0.25 a 0.75 % +- 6V DC moyen moteur*/	
-			//cmdLRM = 3200*0.4;
-			//cmdRRM = 3200*0.4;
-	
-		// Moteur avant
-		/* > 50 % droite, < 50 % gauche et 50 % arret        */	
-		/*limitations  de preference 0.4 a 0.6 %             */	
-		/*limitations max 0.25 a 0.75 % +- 6V DC moyen moteur*/	
-			//cmdSFM= 3200*0.4;
-		/*TIM1->CCR1=cmdLRM;
-		TIM1->CCR2=cmdRRM;
-		TIM1->CCR3=cmdSFM;*/
-		
-		/*        Enable moteurs        */
-		/* GPIO_PIN_SET : activation    */
-		/* GPIO_PIN_RESET : pont ouvert */
-			
-		/*HAL_GPIO_WritePin( GPIOC, GPIO_PIN_10, en_MARG); //PC10  AR_G
-		HAL_GPIO_WritePin( GPIOC, GPIO_PIN_11, en_MARD); //PC11  AR_D
-		HAL_GPIO_WritePin( GPIOC, GPIO_PIN_12, en_MAV);  //PC12  AV*/
 		
 		/* CAN */
 		// Envoi des mesures
