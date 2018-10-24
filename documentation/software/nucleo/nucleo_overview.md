@@ -46,27 +46,30 @@ The full description of the port configuration is provided in the file [electron
 
 ## How to manage sensors and actuators
 
+### Voltage measurements
+
 All voltage measurements (battery, steering angle, current left rear motor, current right rear motor and current front motor)  are made in continuous mode by the ADC. The measurements are stored in a circular buffer in the DMA.
 
-### Battery level
+The battery level can be obtained by calling the function `int get_battery_level(void)` and the position angle of the steering by `int get_steering_angle(void)`. Battery and steering angle are raw data.
 
-The battery level is obtained by calling the function `u8 get_battery_level(void)`. 
+The value for the battery is between 0 and 0xFFF. The battery level U (V) can be computed by U = (4095 / Bat\_mes) * (3.3 / 0.2). The nominal operation of the battery has to be between 11 and 14 V. 
 
-### Steering angle
+The steering angle has to be calibrate.
 
-The steering wheel angle is obtained by calling the function `s8 get_steering_angle(void)`. The value returned an estimate of the steering wheel angle in degrees.
+### Wheel motor speed
 
-The steering wheel angle is set by calling the `void set_steering_angle(int angle)` function. The value `angle` must be between -45 and 45.
+The speed of the wheel motors is computed by mesuring the duration between two edges of a coder. This value can be obtained by using the function `int void get_speed_right_motor()` or `int void get_speed_left_motor()`. The value is given in *0.01 rpm.
+
 
 ### Motor Commands
 
 All engines are speed controlled, even the steering wheel engine. 
 
-The command of a motor is encoded by 8-bit data. The bit 7 is used to enadble or disable the motor and bits 6-0 are used to code the value of the command. The values are between 0 and 100 with 50 to stop the motor. To avoid problems some software thresholds were implemented.
+The command of a motor is encoded by 8-bit data. The bit 7 is used to enable or disable the motor and bits 6-0 are used to code the value of the command. The values are between 0 and 100 with 50 to stop the motor. To avoid problems some software thresholds were implemented (25-75 for the wheels and 40-60 for the steering).
 
-**Warning:** All motors operate in open loop.
+**Warning:** All motors operate in open loop. Thus, the steering  is not controled in angle.
 
-The motor control of the wheels is done by calling the function `wheels_set_speed()`. This function is periodically called in the main file.
+The motor control of the wheels is done by calling the function `wheels_set_speed`. The motor control of the steering is done by calling `steering_set_speed`. These functions are periodically called in the main file.
 
 
 ## How to use the CAN bus
@@ -77,13 +80,15 @@ The reception of a message is done in the callback function of the CAN interrupt
 
 ## Scheduling
 
-The position of the wheels is updated by interruption on the fronts.
+### Motor speed
+The speed is calculated under interruption at each edge of the coder of each wheel. The clock used to calculate the speed is the timer TIM2 for the left wheel and TIM4 for the right wheel. This timer is reset at each interruption and give directly the speed. if the car does not move then the speed is set to zero after 100ms.
 
-The speed is calculated under interruption at each edge of the position sensor. The clock used to calculate the speed is the timer. This timer is reset at each interruption and 
+### Voltage measurements
+Voltage measurements are continuously updated by the ADC, so there is no scheduling for these values. They can be read asynchronously. The freshness of the data is less than 1ms.
 
-The speed of the rear wheel and steering wheel position are updated under interruption when orders are received on te CAN bus.
+### Motor Commands
+The motor consigns are updated each time a CAN message is received. The actuators are updated periodically in the loop of the main file. The base period is 20ms. It can be changed by changing the value of the `PERIOD\_UPDATE\_CMD` constant in the `Inc/main.h` file. The maximum response time to react to a command is approximatively egals to the time transmission of the CAN MCM message, plus the period of the update loop.
 
-The sending of information on wheel position and speed, steering wheel position and battery level is done under interruption of the Systick.
-
-
+### Sending data sensors
+The battery level, the steering angle, and the speeds of the left and right motor are periodically send with a period egals to 100ms. It can be changed by changing the value of the `PERIOD\_CAN\_SEND` constant in the `Inc/main.h` file.
 
