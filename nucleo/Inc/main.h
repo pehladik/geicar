@@ -44,7 +44,8 @@
 /* Includes ------------------------------------------------------------------*/
 
 /* USER CODE BEGIN Includes */
-void commande_volant(void);
+#include "wheels.h"
+#include "steering.h"
 /* USER CODE END Includes */
 
 /* Private define ------------------------------------------------------------*/
@@ -70,7 +71,8 @@ void commande_volant(void);
 /* #define USE_FULL_ASSERT    1U */
 
 /* USER CODE BEGIN Private defines */
-
+#define PERIOD_UPDATE_CMD 20 // Period in ms to update motor commands
+#define PERIOD_SEND_MES 100 // Period in ms to send data
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

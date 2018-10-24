@@ -45,7 +45,7 @@
 /* USER CODE BEGIN 0 */
 
 
-extern int pwmG, pwmD, pwmAV;
+extern int cmdLRM, cmdRRM, cmdSFM ;
 extern int en_MARG, en_MARD, en_MAV;
 /* USER CODE END 0 */
 
@@ -175,30 +175,35 @@ void CAN_Send(uint8_t* data, uint32_t id)
 
 
 
-
-
-int MoteurAR_PWM(uint8_t data, int *en_M)
+int read_cmd(uint8_t data, int *en_M)
 {
 	*en_M = data >> 7;
 	uint8_t VMdata = data & 0x7F;
-		
+	return VMdata;
+}
+
+/*int MoteurAR_PWM(uint8_t data, int *en_M)
+{
+	*en_M = data >> 7;
+	uint8_t VMdata = data & 0x7F;
+	return VMdata;
 		if( VMdata < 25) VMdata = 25;
 		else if( VMdata > 75 ) VMdata = 75;
 		
-		return 3200 * ( VMdata / 100.0 );
-}
+		return 3200 * ( VMdata / 100.0 );*/
+//}
 
 
-int MoteurAV_PWM(uint8_t data, int *en_M)
+/*int MoteurAV_PWM(uint8_t data, int *en_M)
 {
 	*en_M = data >> 7;
 	uint8_t VMdata = data & 0x7F;
-		
+	return VMdata;
 	if( VMdata < 40) VMdata = 40;
 	else if( VMdata > 60 ) VMdata = 60;
 	
-	return 3200 * ( VMdata / 100.0 );
-}
+	return 3200 * ( VMdata / 100.0 );*/
+//}
 
 
 void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan)
@@ -207,9 +212,9 @@ void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan)
 	/* Consigne vitesse moteur */
 	if(hcan->pRxMsg->StdId == CAN_ID_CMC)
 	{
-		pwmG  = MoteurAR_PWM(hcan->pRxMsg->Data[0], &en_MARG);
-		pwmD  = MoteurAR_PWM(hcan->pRxMsg->Data[1], &en_MARD);
-		pwmAV = MoteurAV_PWM(hcan->pRxMsg->Data[2], &en_MAV);
+		cmdLRM  = read_cmd(hcan->pRxMsg->Data[0], &en_MARG);
+		cmdRRM  = read_cmd(hcan->pRxMsg->Data[1], &en_MARD);
+		cmdSFM = read_cmd(hcan->pRxMsg->Data[2], &en_MAV);
 	}
 	
 	__HAL_CAN_ENABLE_IT(hcan, CAN_IT_FMP0);

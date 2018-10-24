@@ -45,7 +45,7 @@
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
-#include "wheels.h"
+
 
 
 /* USER CODE BEGIN Includes */
@@ -56,6 +56,9 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
+int UPDATE_CMD_FLAG = 0;
+int SEND_CAN = 0;
+
 /* Tous ADC sur 12 bits pleine echelle 3.3V
 	ADCBUF[0] mesure batterie 
 	ADCBUF[1] angle volant
@@ -65,14 +68,14 @@
 */
 uint32_t ADCBUF[5];
 
-int pwmG = 3200*0.5, pwmD = 3200*0.5, pwmAV = 3200*0.5; // 0 à 3200 Moteur gauche, droit, avant
+int cmdLRM = 50, cmdRRM = 50, cmdSFM = 50; // 0 à 100 Moteur gauche, droit, avant
 
 uint32_t VMG_mes = 0, VMD_mes = 0, per_vitesseG = 0, per_vitesseD = 0;
 //int	volatile i=0;
 /* Enable Moteurs */
-int en_MARG = GPIO_PIN_RESET;
-int en_MARD = GPIO_PIN_RESET;
-int en_MAV  = GPIO_PIN_RESET;
+GPIO_PinState en_MARG = GPIO_PIN_RESET;
+GPIO_PinState en_MARD = GPIO_PIN_RESET;
+GPIO_PinState en_MAV  = GPIO_PIN_RESET;
 /*********************************Informations rotation volant********************************/
 /* mesure angulaire potentiometre amplitudes volant +/- 17 % environ autour du centre        */
 /* PWM = 0.5 (50) % arret, PWM = 0.4 tourne gauche, PWM = 0.6 tourne droite                  */
@@ -205,52 +208,59 @@ int main(void)
 
   /* USER CODE BEGIN 3 */
 		
-	 	
+		/* Update motors command*/
+		if (UPDATE_CMD_FLAG){
+			UPDATE_CMD_FLAG = 0;
+			
+			wheels_set_speed(en_MARD, en_MARG, cmdRRM, cmdLRM);
+			steering_set_speed(en_MAV, cmdSFM);
+		}
+
+		
 		/*                PWM moteurs                    */	
 		/* Tous moteurs : de preference ENABLE moteur = 0 a l'arret */
 		
 		// Moteurs arrieres 
 		/* > 50 % avance, < 50 % recule et 50 % arret    */	
 		/*limitations 0.25 a 0.75 % +- 6V DC moyen moteur*/	
-			//pwmG = 3200*0.4;
-			//pwmD = 3200*0.4;
+			//cmdLRM = 3200*0.4;
+			//cmdRRM = 3200*0.4;
 	
 		// Moteur avant
 		/* > 50 % droite, < 50 % gauche et 50 % arret        */	
 		/*limitations  de preference 0.4 a 0.6 %             */	
 		/*limitations max 0.25 a 0.75 % +- 6V DC moyen moteur*/	
-			//pwmAV= 3200*0.4;
-		 wheels_set_speed(en_MARD, en_MARG, pwmD, pwmG);
-		
-		
-		/*TIM1->CCR1=pwmG;
-		TIM1->CCR2=pwmD;*/
-		TIM1->CCR3=pwmAV;
+			//cmdSFM= 3200*0.4;
+		/*TIM1->CCR1=cmdLRM;
+		TIM1->CCR2=cmdRRM;
+		TIM1->CCR3=cmdSFM;*/
 		
 		/*        Enable moteurs        */
 		/* GPIO_PIN_SET : activation    */
 		/* GPIO_PIN_RESET : pont ouvert */
 			
 		/*HAL_GPIO_WritePin( GPIOC, GPIO_PIN_10, en_MARG); //PC10  AR_G
-		HAL_GPIO_WritePin( GPIOC, GPIO_PIN_11, en_MARD); //PC11  AR_D*/
-		HAL_GPIO_WritePin( GPIOC, GPIO_PIN_12, en_MAV);  //PC12  AV
+		HAL_GPIO_WritePin( GPIOC, GPIO_PIN_11, en_MARD); //PC11  AR_D
+		HAL_GPIO_WritePin( GPIOC, GPIO_PIN_12, en_MAV);  //PC12  AV*/
 		
 		/* CAN */
 		// Envoi des mesures
-		data[0] = (ADCBUF[1] >> 8) & 0xFF; // Vol_mes
-		data[1] = ADCBUF[1] & 0xFF;
-		
-		data[2] = (ADCBUF[0] >> 8) & 0xFF; // Bat_mes
-		data[3] = ADCBUF[0] & 0xFF;
-		
-		data[4] = (VMG_mes >> 8) & 0xFF; // VMG_mes
-		data[5] = VMG_mes & 0xFF;
-		
-		data[6] = (VMD_mes >> 8) & 0xFF; // VMD_mes
-		data[7] = VMD_mes & 0xFF;
-		
-		CAN_Send(data, CAN_ID_MS);
-		//HAL_Delay(1000);
+		if (SEND_CAN){
+			SEND_CAN = 0;
+			data[0] = (ADCBUF[1] >> 8) & 0xFF; // Vol_mes
+			data[1] = ADCBUF[1] & 0xFF;
+			
+			data[2] = (ADCBUF[0] >> 8) & 0xFF; // Bat_mes
+			data[3] = ADCBUF[0] & 0xFF;
+			
+			data[4] = (VMG_mes >> 8) & 0xFF; // VMG_mes
+			data[5] = VMG_mes & 0xFF;
+			
+			data[6] = (VMD_mes >> 8) & 0xFF; // VMD_mes
+			data[7] = VMD_mes & 0xFF;
+			
+			CAN_Send(data, CAN_ID_MS);
+		}
 		
   }
   /* USER CODE END 3 */

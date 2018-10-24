@@ -45,6 +45,8 @@ extern DMA_HandleTypeDef hdma_adc1;
 extern CAN_HandleTypeDef hcan;
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim4;
+extern int UPDATE_CMD_FLAG ;
+extern int SEND_CAN;
 
 /******************************************************************************/
 /*            Cortex-M3 Processor Interruption and Exception Handlers         */ 
@@ -82,13 +84,24 @@ void PendSV_Handler(void)
 void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
-
+	static int cmpt_cmd = 0;
+	static int cmpt_can = 0;
   /* USER CODE END SysTick_IRQn 0 */
+	
   HAL_IncTick();
   HAL_SYSTICK_IRQHandler();
   /* USER CODE BEGIN SysTick_IRQn 1 */
-
-
+	cmpt_cmd ++;
+	cmpt_can ++;
+	
+	if (cmpt_cmd % PERIOD_UPDATE_CMD){
+		UPDATE_CMD_FLAG = 1;
+		cmpt_cmd = 0;
+	}
+	if (cmpt_can % PERIOD_SEND_MES){
+		SEND_CAN = 1;
+		cmpt_can = 0;
+	}
   /* USER CODE END SysTick_IRQn 1 */
 }
 
