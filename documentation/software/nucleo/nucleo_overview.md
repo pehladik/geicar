@@ -10,7 +10,7 @@ The Nucleo board controls the vehicle's engines and steering, as well as the bat
 | PA0  | Analog Input  | ADC1 IN0 |Battery Level             |
 | PA1  | Analog Input  | ADC1 IN1 | Steering wheel angle     |
 | PB10 | AF Output PP  | TIM2 CH3 | Position left motor |
-| PB11 | AF Output PP  | TIM2 CH4 | Position right motor   |
+| PB8 | AF Output PP  | TIM4 CH3 | Position right motor   |
 
 ### Left wheel motor
 | Port | Configuration | Remap | Description                  |
@@ -42,6 +42,7 @@ The Nucleo board controls the vehicle's engines and steering, as well as the bat
 | PA11 | AF Output PP  | CAN RX | CAN Rx bus                  |
 | PA12 | AF Output PP  | CAN TX | CN TX bus                   |
 
+The full description of the port configuration is provided in the file [electronic board](../../../nucleo/voiture-elec.txt).
 
 ## How to manage sensors and actuators
 
