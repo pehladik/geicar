@@ -5,6 +5,6 @@ This server is developed in Python using the Pican 2 libraries. To install the l
 The server is launched with
 
 ````
-python2 server.py
+python3 server.py
 ````
 The default port of the server is `6666`. To change it you have to modifiy the code.
