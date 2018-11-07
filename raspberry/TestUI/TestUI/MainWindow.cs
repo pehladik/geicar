@@ -27,21 +27,41 @@ public partial class MainWindow : Gtk.Window
         nwStream.Write(bytes, 0, bytes.Length);
     }
 
-    protected void OnBtconnectClicked(object sender, EventArgs e)
+    protected async void OnBtconnectClicked(object sender, EventArgs e)
     {
         try
         {
+            // Connect the socket to the server
             clientSocket.Connect(ip.Text, 6666);
+
             btconnect.Label = "Connected";
             btconnect.State = StateType.Insensitive;
             nwStream = clientSocket.GetStream();
+            // Send initial speed value
             byte[] bytes = Encoding.ASCII.GetBytes("SPE" + hscale4.Value.ToString());
             nwStream.Write(bytes, 0, bytes.Length);
-            byte[] myReadBuffer = new byte[20];
 
-            nwStream.Read(myReadBuffer, 0, myReadBuffer.Length);
-            USFC.Text = Encoding.UTF8.GetString(myReadBuffer);
 
+            while(clientSocket.Connected){
+                byte[] myReadBuffer = new byte[20];
+                await nwStream.ReadAsync(myReadBuffer, 0, myReadBuffer.Length);
+                String st = Encoding.UTF8.GetString(myReadBuffer);
+                String[] elt = st.Split(':');
+                switch (elt[0]){
+                    case "UFL":
+                        USFL.Text = elt[1];
+                        break;
+                    case "UFR":
+                        USFR.Text = elt[1];
+                        break;
+                    case "URC":
+                        USFC.Text = elt[1];
+                        break;
+                }
+
+
+
+            }
         }
         catch (SocketException ex)
         {

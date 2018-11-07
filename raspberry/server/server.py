@@ -69,73 +69,73 @@ class MySend(Thread):
             if msg.arbitration_id == US1:
                 # ultrason avant gauche
                 distance = int.from_bytes(msg.data[0:2], byteorder='big')
-                message = "UFL" + str(distance)
+                message = "UFL:" + str(distance)
                 size = self.conn.send(message.encode())
                 if size == 0: break
                 # ultrason avant droit
                 distance = int.from_bytes(msg.data[2:4], byteorder='big')
-                message = "UFR" + str(distance)
+                message = "UFR:" + str(distance)
                 size = self.conn.send(message.encode())
                 if size == 0: break
                 # ultrason arriere centre
                 distance = int.from_bytes(msg.data[4:6], byteorder='big')
-                message = "URC" + str(distance)
+                message = "URC:" + str(distance)
                 size = self.conn.send(message.encode())
                 if size == 0: break
                 '''
             elif msg.arbitration_id == US2:
                 # ultrason arriere gauche
                 distance = int.from_bytes(msg.data[0:2], byteorder='big')
-                message = "URL" + str(distance)
+                message = "URL:" + str(distance)
                 size = self.conn.send(message.encode())
                 if size == 0: break
                 # ultrason arriere droit
                 distance = int.from_bytes(msg.data[2:4], byteorder='big')
-                message = "URR" + str(distance)
+                message = "URR:" + str(distance)
                 size = self.conn.send(message.encode())
                 if size == 0: break
                 # ultrason avant centre
                 distance = int.from_bytes(msg.data[4:6], byteorder='big')
-                message = "UFC" + str(distance)
+                message = "UFC:" + str(distance)
                 size = self.conn.send(message.encode())
                 if size == 0: break
             elif msg.arbitration_id == MS:
                 # position volant
                 angle = int.from_bytes(msg.data[0:2], byteorder='big')
-                message = "POS" + str(angle)
+                message = "POS:" + str(angle)
                 size = self.conn.send(message.encode())
                 if size == 0: break
                 # Niveau de la batterie
                 bat = int.from_bytes(msg.data[2:4], byteorder='big')
-                message = "BAT" + str(bat)
+                message = "BAT:" + str(bat)
                 size = self.conn.send(message.encode())
                 if size == 0: break
                 # vitesse roue gauche
                 speed_left = int.from_bytes(msg.data[4:6], byteorder='big')
-                message = "SWL" + str(speed_left)
+                message = "SWL:" + str(speed_left)
                 size = self.conn.send(message.encode())
                 if size == 0: break
                 # vitesse roue droite
                 # header : SWR payload : entier, *0.01rpm
                 speed_right= int.from_bytes(msg.data[6:8], byteorder='big')
-                message = "SWR" + str(speed_right)
+                message = "SWR:" + str(speed_right)
                 size = self.conn.send(message.encode())
                 if size == 0: break
             elif msg.arbitration_id == OM1:
                 # Yaw
                 yaw = struct.unpack('<f',msg.data[0:4])
-                message = "YAW" + str(yaw)
+                message = "YAW:" + str(yaw)
                 size = self.conn.send(message.encode())
                 if size == 0: break
                 # Pitch
                 pitch = struct.unpack('<f',msg.data[4:8])
-                message = "PIT" + str(pitch)
+                message = "PIT:" + str(pitch)
                 size = self.conn.send(message.encode())
                 if size == 0: break
             elif msg.arbitration_id == OM2:
                 # Roll
                 roll = struct.unpack('<f',msg.data[0:4])
-                message = "ROL" + str(roll)
+                message = "ROL:" + str(roll)
                 size = self.conn.send(message.encode())
                 if size == 0: break
                 '''
