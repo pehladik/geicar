@@ -27,7 +27,7 @@ public partial class MainWindow : Gtk.Window
         nwStream.Write(bytes, 0, bytes.Length);
     }
 
-    protected async void OnBtconnectClicked(object sender, EventArgs e)
+    protected void OnBtconnectClicked(object sender, EventArgs e)
     {
         try
         {
@@ -40,34 +40,73 @@ public partial class MainWindow : Gtk.Window
             // Send initial speed value
             byte[] bytes = Encoding.ASCII.GetBytes("SPE" + hscale4.Value.ToString());
             nwStream.Write(bytes, 0, bytes.Length);
+            Receive();
 
 
-            while(clientSocket.Connected){
-                byte[] myReadBuffer = new byte[20];
-                await nwStream.ReadAsync(myReadBuffer, 0, myReadBuffer.Length);
-                String st = Encoding.UTF8.GetString(myReadBuffer);
-                String[] elt = st.Split(':');
-                switch (elt[0]){
-                    case "UFL":
-                        USFL.Text = elt[1];
-                        break;
-                    case "UFR":
-                        USFR.Text = elt[1];
-                        break;
-                    case "URC":
-                        USFC.Text = elt[1];
-                        break;
-                }
-
-
-
-            }
         }
         catch (SocketException ex)
         {
             btconnect.Label = "Failed to connect";
             Console.WriteLine(ex.Message);
         }
+    }
+
+    async void Receive(){
+        while (clientSocket.Connected)
+        {
+            byte[] myReadBuffer = new byte[20];
+            await nwStream.ReadAsync(myReadBuffer, 0, myReadBuffer.Length);
+            String st = Encoding.UTF8.GetString(myReadBuffer);
+            String[] msgs = st.Split(';');
+
+            foreach (String msg in msgs){
+                String[] elt = msg.Split(':');
+                switch (elt[0])
+                {
+                    case "UFL":
+                        USFL.LabelProp = elt[1];
+                        break;
+                    case "UFC":
+                        USFC.LabelProp = elt[1];
+                        break;
+                    case "UFR":
+                        USFR.LabelProp = elt[1];
+                        break;
+                    case "URL":
+                        USRL.LabelProp = elt[1];
+                        break;
+                    case "URC":
+                        USRC.LabelProp = elt[1];
+                        break;
+                    case "URR":
+                        USRR.LabelProp = elt[1];
+                        break;
+                    case "POS":
+                        ePOS.Text = elt[1];
+                        break;
+                    case "BAT":
+                        eBAT.Text = elt[1];
+                        break;
+                    case "SWL":
+                        eSPL.Text = elt[1];
+                        break;
+                    case "SWR":
+                        eSPR.Text = elt[1];
+                        break;
+                    case "YAW":
+                        eYAW.Text = elt[1];
+                        break;
+                    case "ROL":
+                        eROL.Text = elt[1];
+                        break;
+                    case "PIT":
+                        ePIT.Text = elt[1];
+                        break;
+                }
+            }
+        }
+
+
     }
 
     protected void OnButton1Clicked(object sender, EventArgs e)
