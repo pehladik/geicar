@@ -64,7 +64,9 @@ class MySend(Thread):
     def run(self):
         while True :
             msg = self.bus.recv()
+
             #print(msg.arbitration_id, msg.data)
+            st = ""
 
             if msg.arbitration_id == US1:
                 # ultrason avant gauche
@@ -98,7 +100,6 @@ class MySend(Thread):
                 message = "UFC:" + str(distance)+ ";"
                 size = self.conn.send(message.encode())
                 if size == 0: break
-                '''
             elif msg.arbitration_id == MS:
                 # position volant
                 angle = int.from_bytes(msg.data[0:2], byteorder='big')
@@ -123,22 +124,26 @@ class MySend(Thread):
                 if size == 0: break
             elif msg.arbitration_id == OM1:
                 # Yaw
-                yaw = struct.unpack('<f',msg.data[0:4])
-                message = "YAW:" + str(yaw)+ ";"
+                yaw = struct.unpack('>f',msg.data[0:4])
+                message = "YAW:" + str(yaw[0])+ ";"
+                #st += message
                 size = self.conn.send(message.encode())
                 if size == 0: break
                 # Pitch
-                pitch = struct.unpack('<f',msg.data[4:8])
-                message = "PIT:" + str(pitch)+ ";"
+                pitch = struct.unpack('>f',msg.data[4:8])
+                message = "PIT:" + str(pitch[0])+ ";"
+                #st += message
                 size = self.conn.send(message.encode())
                 if size == 0: break
             elif msg.arbitration_id == OM2:
                 # Roll
-                roll = struct.unpack('<f',msg.data[0:4])
-                message = "ROL:" + str(roll)+ ";"
+                roll = struct.unpack('>f',msg.data[0:4])
+                message = "ROL:" + str(roll[0])+ ";"
+                #st += message
                 size = self.conn.send(message.encode())
                 if size == 0: break
-                '''
+
+            #if (st!=""):print(st)
 
 
 class MyReceive(Thread):

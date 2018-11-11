@@ -47,23 +47,25 @@ public partial class MainWindow : Gtk.Window
         catch (SocketException ex)
         {
             btconnect.Label = "Failed to connect";
-            Console.WriteLine(ex.Message);
+            Console.WriteLine(ex.Message); 
         }
     }
 
     async void Receive(){
+        int cmpt = 0;
         while (clientSocket.Connected)
         {
-            byte[] myReadBuffer = new byte[20];
+            byte[] myReadBuffer = new byte[2048];
             await nwStream.ReadAsync(myReadBuffer, 0, myReadBuffer.Length);
             String st = Encoding.UTF8.GetString(myReadBuffer);
             String[] msgs = st.Split(';');
 
             foreach (String msg in msgs){
+                Console.WriteLine(msg);
                 String[] elt = msg.Split(':');
                 switch (elt[0])
                 {
-                    case "UFL":
+                    /*case "UFL":
                         USFL.LabelProp = elt[1];
                         break;
                     case "UFC":
@@ -92,7 +94,7 @@ public partial class MainWindow : Gtk.Window
                         break;
                     case "SWR":
                         eSPR.Text = elt[1];
-                        break;
+                        break;*/
                     case "YAW":
                         eYAW.Text = elt[1];
                         break;
@@ -102,10 +104,48 @@ public partial class MainWindow : Gtk.Window
                     case "PIT":
                         ePIT.Text = elt[1];
                         break;
+                    default:
+                        cmpt = (cmpt + 1) % 100;
+                        break;
+                }
+                if (cmpt == 0)
+                {
+                    switch (elt[0])
+                    {
+                        case "UFL":
+                            USFL.LabelProp = elt[1];
+                            break;
+                        case "UFC":
+                            USFC.LabelProp = elt[1];
+                            break;
+                        case "UFR":
+                            USFR.LabelProp = elt[1];
+                            break;
+                        case "URL":
+                            USRL.LabelProp = elt[1];
+                            break;
+                        case "URC":
+                            USRC.LabelProp = elt[1];
+                            break;
+                        case "URR":
+                            USRR.LabelProp = elt[1];
+                            break;
+                        case "POS":
+                            ePOS.Text = elt[1];
+                            break;
+                        case "BAT":
+                            eBAT.Text = elt[1];
+                            break;
+                        case "SWL":
+                            eSPL.Text = elt[1];
+                            break;
+                        case "SWR":
+                            eSPR.Text = elt[1];
+                            break;
+                    }
                 }
             }
         }
-
 
     }
 
