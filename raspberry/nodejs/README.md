@@ -2,6 +2,8 @@
 
 This code is an example of a nodejs server to provide an UI for the GeiCar. The code was written by Lucien Senaneuch and is available on [github](https://github.com/daihitsuji/UI-CAR).
 
+:warning: **This code was produced for an older version of the CAN messages. The project is not functional with the current messages..**
+
 ## What is nodejs
 
 Node.js is an open-source, cross-platform JavaScript run-time environment that executes JavaScript code outside of a browser. Node.js allows the creation of Web servers and networking tools using JavaScript and a collection of "modules" that handle various core functionality.
