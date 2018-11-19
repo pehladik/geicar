@@ -1,21 +1,22 @@
-# Communication bluetooth et CAN sur RasPi 3.0
+# Bluetooth and CAN communication on RasPi 3.0
 
-# Pré-requis
+:warning: **This code was produced for an older version of the CAN messages. The project is not functional with the current messages..**
 
-## Installer bluetooth bibliothèque :
+# Prerequisites
+
+## Install Bluetooth library
 
 ```
 sudo apt-get install libbluetooth-dev
 ```
 
-## Initialiser interface de CAN
-Initialiser CAN interface en suivant l'instruction suivant:
-
-https://copperhilltech.com/pican2-controller-area-network-can-interface-for-raspberry-pi/
+## Initialize CAN interface
+Initialize CAN interface by following the following instruction from the 
+[PICAN site].(https://copperhilltech.com/pican2-controller-area-network-can-interface-for-raspberry-pi/)
 
 
 # Usage
-Pour établir la communication bluetooth:
+To establish Bluetooth communication:
 
 ```
 cd ~/bluetooth/src/
