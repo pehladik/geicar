@@ -94,11 +94,11 @@ void SysTick_Handler(void)
 	cmpt_cmd ++;
 	cmpt_can ++;
 	
-	if (cmpt_cmd % PERIOD_UPDATE_CMD){
+	if (cmpt_cmd == PERIOD_UPDATE_CMD){
 		UPDATE_CMD_FLAG = 1;
 		cmpt_cmd = 0;
 	}
-	if (cmpt_can % PERIOD_SEND_MES){
+	if (cmpt_can == PERIOD_SEND_MES){
 		SEND_CAN = 1;
 		cmpt_can = 0;
 	}
