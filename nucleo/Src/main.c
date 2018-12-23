@@ -68,21 +68,20 @@ int SEND_CAN = 0;
 */
 uint32_t ADCBUF[5];
 
-int cmdLRM = 50, cmdRRM = 50, cmdSFM = 50; // 0 à 100 Moteur gauche, droit, avant
+int cmdLRM = 50, cmdRRM = 50, cmdSFM = 50, cmdPOS = 50; // 0 à 100 Moteur gauche, droit, avant, angle avant
 
 uint32_t VMG_mes = 0, VMD_mes = 0, per_vitesseG = 0, per_vitesseD = 0;
-//int	volatile i=0;
-/* Enable Moteurs */
+
+/* 				Enable Moteurs 				*/
+/* 	GPIO_PIN_SET : activation   */
+/* GPIO_PIN_RESET : pont ouvert */
 GPIO_PinState en_MARG = GPIO_PIN_RESET;
 GPIO_PinState en_MARD = GPIO_PIN_RESET;
-GPIO_PinState en_MAV  = GPIO_PIN_RESET;
+GPIO_PinState en_MAV = GPIO_PIN_RESET;
+GPIO_PinState en_POS = GPIO_PIN_RESET;
 /*********************************Informations rotation volant********************************/
 /* mesure angulaire potentiometre amplitudes volant +/- 17 % environ autour du centre        */
-/* PWM = 0.5 (50) % arret, PWM = 0.4 tourne gauche, PWM = 0.6 tourne droite                  */
-/*butees potar  volant :                                                                         */
-#define gauche_volant 2395  
-#define centre_volant 2056  
-#define droite_volant 1825  
+/* PWM = 0.5 (50) % arret, PWM = 0.4 tourne gauche, PWM = 0.6 tourne droite                  */ 
 
 CanTxMsgTypeDef TxMessage;
 CanRxMsgTypeDef RxMessage;
@@ -214,6 +213,9 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 	
+	/* Initialisation Steering */
+	steering_Init();
+	
   while (1)
   {
   /* USER CODE END WHILE */
@@ -225,7 +227,14 @@ int main(void)
 			UPDATE_CMD_FLAG = 0;
 			
 			wheels_set_speed(en_MARD, en_MARG, cmdRRM, cmdLRM);
+			
+			// Assure la non-contradiction des commandes moteurs
+			if ((en_MAV == GPIO_PIN_SET) && (en_POS == GPIO_PIN_SET))
+			{
+				en_POS = GPIO_PIN_RESET;
+			}
 			steering_set_speed(en_MAV, cmdSFM);
+			steering_set_position(en_POS, cmdPOS);
 		}
 		
 		/* CAN */

@@ -72,7 +72,7 @@
 
 /* USER CODE BEGIN Private defines */
 #define PERIOD_UPDATE_CMD 20 // Period in ms to update motor commands
-#define PERIOD_SEND_MES 20000 // Period to send data -> 100 = 1ms
+#define PERIOD_SEND_MES 100 // Period in ms to send data
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
