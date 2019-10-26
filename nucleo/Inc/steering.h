@@ -25,4 +25,9 @@ int steering_get_angle(void);
 **/
 void steering_set_position (GPIO_PinState en_steering, int msg_CAN);
 
+/**
+ * Cmd wheels with buttons
+ */
+void move_steering_with_button();
+
 #endif
