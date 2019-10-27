@@ -13,6 +13,10 @@ This repository is intended to provide a basis for students starting a new proje
 * DEBAILLEUX Margaux, COMBES Jean, FARO Mathias, FAYARD Baptiste, GANDOU Thomas.
 * GISSOT Lucas, LUBAT Eric, LARSSON Léo, LOUPIAS Delia, TAMIMO Volamiary.
 * MEDRANO Johan, MIRAULT Clara, MONNERET Vivien, PORTES Quentin, SHIN Sohun, IGLESIS Enzo.
+* ANTUNES COELHO Carolina, CHATELAIN Vincent, JOURDE Tanguy, PUECHMAILLE David, SIRGABSOU Yandika
+* KIM EunHwan, STENKULA Ninni, VIGNOLLES Amaury, TAHIRI Abdelilah, OJEDA Leonardo, PONCY Jonathan
+* AMARIR Azeddine, BOUHASSOUM Assya, DELGA Baptiste, LASGUIGNES Thibaud, LEMAÎTRE Aurélien, PARIS Christine
+* BELLET Valentine, PUECH Camille, MUREDDU Antoine, NUSSLI Gabriel, SADIK Anass
 
 The platform is (or was) developped and maintained by :
 
@@ -22,12 +26,14 @@ The platform is (or was) developped and maintained by :
 * SENANEUCH Lucien
 
 
-The projects were surpervised by:
+The projects are (or were) surpervised by:
 
 * ACCO Pascal
 * CAMPS Frédéric
 * CHANTHERY Elodie
 * DELAUTIER Sébastien
+* GAUDEL Quentin
 * HLADIK Pierre-Emmanuel
+* LESUR Thibault
 * LE BOTLAN Didier
 * SUBIAS Audine

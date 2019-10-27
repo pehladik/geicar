@@ -86,7 +86,8 @@ void MX_GPIO_Init(void)
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
     
-    /*Configure output GPIOA PIN_6  commande auto-maintien de l'alimentation (Bouton central)  */
+    /*Configure GPIO pins :
+        output PP GPIOA PIN_6: latch power */
     GPIO_InitStruct.Pin = GPIO_PIN_6;
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -99,8 +100,8 @@ void MX_GPIO_Init(void)
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
     
     /*Configure GPIO pins :
-        input GPIOB PIN_14, bouton_droite
-        input GPIOB PIN_15, bouton_gauche*/
+        input Pullup GPIOB PIN_14: right button to control steering wheel
+        input Pullup GPIOB PIN_15: left button to control steering wheel*/
     GPIO_InitStruct.Pin = GPIO_PIN_14|GPIO_PIN_15;
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
     GPIO_InitStruct.Pull = GPIO_PULLUP;
