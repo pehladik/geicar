@@ -225,7 +225,6 @@ int main(void)
         
         /* USER CODE BEGIN 3 */
 
-        steering_move_with_button();
         /* Update motors command*/
         if (UPDATE_CMD_FLAG){
             UPDATE_CMD_FLAG = 0;
@@ -237,10 +236,11 @@ int main(void)
             {
                 en_POS = GPIO_PIN_RESET;
             }
-						if (!steering_is_a_button_pressed()){
-							steering_set_speed(en_MAV, cmdSFM);
-							steering_set_position(en_POS, cmdPOS);
-						}	
+            if (!steering_is_a_button_pressed()){
+                steering_set_speed(en_MAV, cmdSFM);
+                //steering_set_position(en_POS, cmdPOS);
+            }
+            steering_move_with_button();
         }
         
         /* CAN */
