@@ -28,6 +28,12 @@ void steering_set_position (GPIO_PinState en_steering, int msg_CAN);
 /**
  * Cmd wheels with buttons
  */
-void move_steering_with_button();
+void steering_move_with_button(void);
+
+/**
+* Return 1 if a steering control button is pressed
+*/
+int steering_is_a_button_pressed(void);
+
 
 #endif

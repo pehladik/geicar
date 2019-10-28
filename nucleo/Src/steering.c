@@ -23,14 +23,15 @@
 #define SPEED_STEP_1 30
 #define SPEED_STEP_2 150
 
+#define pin_bt_right_front_wheel GPIO_PIN_14
+#define pin_bt_left_front_wheel GPIO_PIN_15
 
 /* Private variables ---------------------------------------------------------*/
 
 extern uint32_t ADCBUF[5];
 int droite_volant, gauche_volant;
 
-uint32_t pin_bt_right_front_wheel PIN_14;
-uint32_t pin_bt_left_front_wheel PIN_15;
+
 
 /* Programs ------------------------------------------------------------------*/
 
@@ -97,15 +98,21 @@ void steering_set_position (GPIO_PinState en_steering, int msg_CAN){
     }
 }
 
-void move_steering_with_button(){
+int steering_is_a_button_pressed(){
+	return ((!HAL_GPIO_ReadPin(GPIOB, pin_bt_right_front_wheel)) || (!HAL_GPIO_ReadPin(GPIOB, pin_bt_left_front_wheel)));
+}	
+
+void steering_move_with_button(void){
     static int previous_value_right = GPIO_PIN_RESET;
     static int previous_value_left = GPIO_PIN_RESET;
     int current_value_right = !HAL_GPIO_ReadPin(GPIOB, pin_bt_right_front_wheel);
     int current_value_left = !HAL_GPIO_ReadPin(GPIOB, pin_bt_left_front_wheel);
     
-    if ((current_value_right == GPIO_PIN_SET) && (current_value_left == GPIO_PIN_SET))
+    if (
+				((current_value_right == GPIO_PIN_SET) && (current_value_left == GPIO_PIN_SET))
         || ((current_value_right == GPIO_PIN_RESET) && (previous_value_right == GPIO_PIN_SET))
-        || ((current_value_left == GPIO_PIN_RESET) && (previous_value_left == GPIO_PIN_SET)){
+        || ((current_value_left == GPIO_PIN_RESET) && (previous_value_left == GPIO_PIN_SET))
+				){
         steering_set_speed(GPIO_PIN_RESET, NO_STEERING);
         previous_value_right = GPIO_PIN_RESET;
         previous_value_left = GPIO_PIN_RESET;
@@ -113,7 +120,7 @@ void move_steering_with_button(){
         steering_set_speed(GPIO_PIN_SET, RIGHT_MAX_SPEED_STEERING);
         previous_value_right = GPIO_PIN_SET;
     } else if ((current_value_left == GPIO_PIN_SET) && (previous_value_left == GPIO_PIN_RESET)){
-           steering_set_speed(GPIO_PIN_SET, RIGHT_LEFT_SPEED_STEERING)
+           steering_set_speed(GPIO_PIN_SET, LEFT_MAX_SPEED_STEERING);
            previous_value_left = GPIO_PIN_SET;
     }
 }

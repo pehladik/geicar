@@ -172,7 +172,7 @@ int main(void)
     
     /* Initialize all configured peripherals */
     MX_GPIO_Init();
-    bootstarp_power();
+    power_boostrap();
     
     MX_DMA_Init();
     MX_USART2_UART_Init();
@@ -225,7 +225,7 @@ int main(void)
         
         /* USER CODE BEGIN 3 */
 
-        move_steering_with_button();
+        steering_move_with_button();
         /* Update motors command*/
         if (UPDATE_CMD_FLAG){
             UPDATE_CMD_FLAG = 0;
@@ -237,8 +237,10 @@ int main(void)
             {
                 en_POS = GPIO_PIN_RESET;
             }
-            steering_set_speed(en_MAV, cmdSFM);
-            steering_set_position(en_POS, cmdPOS);
+						if (!steering_is_a_button_pressed()){
+							steering_set_speed(en_MAV, cmdSFM);
+							steering_set_position(en_POS, cmdPOS);
+						}	
         }
         
         /* CAN */
