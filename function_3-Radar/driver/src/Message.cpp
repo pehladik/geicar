@@ -1,61 +1,73 @@
 #include <stdexcept>
+#include <sstream>
 #include "Message.hpp"
 #include "util.hpp"
+#include <iostream>
 
-std::unique_ptr<message> message::parse(std::uint32_t id, const std::bitset<64> &payload) {
+
+std::unique_ptr<Message> Message::parse(std::uint32_t id, const std::bitset<64> &payload) {
 	switch (id) {
 		case 0x60A:
-			return std::make_unique<object_list_status>(payload);
+			return std::make_unique<Object_list_status>(payload);
 		case 0x60B:
-			return std::make_unique<object_general_info>(payload);
+			return std::make_unique<Object_general_info>(payload);
 		case 0x60C:
-			return std::make_unique<object_quality_info>(payload);
+			return std::make_unique<Object_quality_info>(payload);
 		case 0x60D:
-			return std::make_unique<object_ext_info>(payload);
+			return std::make_unique<Object_ext_info>(payload);
+		case 0x200:
+			return std::make_unique<Radar_config>(payload);
+		case 0x202:
+			return std::make_unique<Filter_config>(payload);
 	}
-	throw std::runtime_error{"Unknown message id" + std::to_string(id)};
+	std::ostringstream ss{};
+	ss << "Unknown message id: 0x" << std::hex << id;
+	throw std::runtime_error{ss.str()};
 }
 
-std::ostream &operator<<(std::ostream &os, const message &msg) {
+std::ostream &operator<<(std::ostream &os, const Message &msg) {
 	msg.print(os);
 	return os;
 }
 
 
-object_list_status::object_list_status(const std::bitset<64> &payload) {
-	nofObjects = slice_bitset<0, 8>(payload);
-	measCounter = slice_bitset<16, 16>(payload);
-	interfaceVersion = slice_bitset<28, 4>(payload);
+Object_list_status::Object_list_status(const std::bitset<64> &payload) :
+		nofObjects{reverse_slice<0, 8>(payload)},
+		measCounter{reverse_slice<8, 16>(payload)},
+		interfaceVersion{reverse_slice<24, 4>(payload)} {
 }
 
-void object_list_status::print(std::ostream &os) const {
-	os << "object_list_status:\n" <<
-	   "  nofObjects: " << nofObjects.to_ulong() << '\n' <<
+void Object_list_status::print(std::ostream &os) const {
+	os << "Object_list_status:\n";
+	print_bitset64(os, to_payload());
+	os << "  nofObjects: " << nofObjects.to_ulong() << '\n' <<
 	   "  measCounter: " << measCounter.to_ulong() << '\n' <<
 	   "  interfaceVersion: " << interfaceVersion.to_ulong() << '\n';
 }
 
 
-std::bitset<64> object_list_status::to_payload() {
-	return std::bitset<64>{nofObjects.to_string() +
-	                       measCounter.to_string() +
-	                       interfaceVersion.to_string()};
+std::bitset<64> Object_list_status::to_payload() const {
+	return concat_bitsets(reverse(nofObjects),
+	                      reverse(measCounter),
+	                      reverse(interfaceVersion),
+	                      std::bitset<36>{});
 }
 
 
-object_general_info::object_general_info(const std::bitset<64> &payload) {
-	id = slice_bitset<0, 8>(payload);
-	distLong = slice_bitset<8, 13>(payload);    //désordre
-	distLat = slice_bitset<21, 11>(payload);    //désordre
-	vrelLong = slice_bitset<32, 10>(payload);   //désordre
-	dynProp = slice_bitset<42, 3>(payload);      //désordre
-	vrelLat = slice_bitset<45, 9>(payload);     //désordre
-	rcs = slice_bitset<56, 8>(payload);
-}
+Object_general_info::Object_general_info(const std::bitset<64> &payload) :
+		id{reverse_slice<0, 8>(payload)},
+		distLong{reverse_slice<8, 13>(payload)},
+		distLat{reverse_slice<21, 11>(payload)},
+		vrelLong{reverse_slice<32, 10>(payload)},
+		vrelLat{reverse_slice<42, 9>(payload)},
+		dynProp{reverse_slice<53, 3>(payload)},
+		rcs{reverse_slice<56, 8>(payload)} {}
 
-void object_general_info::print(std::ostream &os) const {
-	os << "object_general_info:\n" <<
-	   "  id: " << id.to_ulong() << '\n' <<
+
+void Object_general_info::print(std::ostream &os) const {
+	os << "Object_general_info:\n";
+	print_bitset64(os, to_payload());
+	os << "  id: " << id.to_ulong() << '\n' <<
 	   "  distLong: " << distLong.to_ulong() << '\n' <<
 	   "  distLat: " << distLat.to_ulong() << '\n' <<
 	   "  vrelLong: " << vrelLong.to_ulong() << '\n' <<
@@ -64,32 +76,34 @@ void object_general_info::print(std::ostream &os) const {
 	   "  rcs: " << rcs.to_ulong() << '\n';
 }
 
-std::bitset<64> object_general_info::to_payload() {
-	return std::bitset<64>{id.to_string() +
-	                       distLong.to_string() +
-	                       distLat.to_string() +
-	                       vrelLong.to_string() +
-	                       dynProp.to_string() +
-	                       vrelLat.to_string() +
-	                       rcs.to_string()};
+std::bitset<64> Object_general_info::to_payload() const {
+	return concat_bitsets(reverse(id),
+	                      reverse(distLong),
+	                      reverse(distLat),
+	                      reverse(vrelLong),
+	                      reverse(vrelLat),
+	                      std::bitset<2>{},
+	                      reverse(dynProp),
+	                      reverse(rcs));
 }
 
-object_quality_info::object_quality_info(const std::bitset<64> &payload) {
-	id = slice_bitset<0, 8>(payload);
-	distLong_rms = slice_bitset<8, 5>(payload);
-	distLat_rms = slice_bitset<13, 5>(payload);     //désordre
-	vrelLong_rms = slice_bitset<18, 5>(payload);    //désordre
-	vrelLat_rms = slice_bitset<23, 5>(payload);     //désordre
-	arelLong_rms = slice_bitset<28, 5>(payload);    //désordre
-	arelLat_rms = slice_bitset<33, 5>(payload);     //désordre
-	orientation_rms = slice_bitset<38, 5>(payload); //désordre
-	measState = slice_bitset<50, 3>(payload);
-	probOfExist = slice_bitset<53, 3>(payload);
-}
+Object_quality_info::Object_quality_info(
+		const std::bitset<64> &payload) :
+		id{reverse_slice<0, 8>(payload)},
+		distLong_rms{reverse_slice<8, 5>(payload)},
+		distLat_rms{reverse_slice<13, 5>(payload)},
+		vrelLong_rms{reverse_slice<18, 5>(payload)},
+		vrelLat_rms{reverse_slice<23, 5>(payload)},
+		arelLong_rms{reverse_slice<28, 5>(payload)},
+		arelLat_rms{reverse_slice<33, 5>(payload)},
+		orientation_rms{reverse_slice<38, 5>(payload)},
+		probOfExist{reverse_slice<48, 3>(payload)},
+		measState{reverse_slice<51, 3>(payload)} {}
 
-void object_quality_info::print(std::ostream &os) const {
-	os << "object_quality_info:\n" <<
-	   "  id: " << id.to_ulong() << '\n' <<
+void Object_quality_info::print(std::ostream &os) const {
+	os << "Object_quality_info:\n";
+	print_bitset64(os, to_payload());
+	os << "  id: " << id.to_ulong() << '\n' <<
 	   "  distLong_rms: " << distLong_rms.to_ulong() << '\n' <<
 	   "  distLat_rms: " << distLat_rms.to_ulong() << '\n' <<
 	   "  vrelLong_rms: " << vrelLong_rms.to_ulong() << '\n' <<
@@ -100,32 +114,35 @@ void object_quality_info::print(std::ostream &os) const {
 	   "  probOfExist: " << probOfExist.to_ulong() << '\n';
 }
 
-std::bitset<64> object_quality_info::to_payload() {
-	return std::bitset<64>{id.to_string() +
-	                       distLong_rms.to_string() +
-	                       vrelLong_rms.to_string() +
-	                       distLat_rms.to_string() +
-	                       vrelLat_rms.to_string() +
-	                       arelLat_rms.to_string() +
-	                       arelLong_rms.to_string() +
-	                       orientation_rms.to_string() +
-	                       measState.to_string() +
-	                       probOfExist.to_string()};
+std::bitset<64> Object_quality_info::to_payload() const {
+	return concat_bitsets(reverse(id),
+	                      reverse(distLong_rms),
+	                      reverse(distLat_rms),
+	                      reverse(vrelLong_rms),
+	                      reverse(vrelLat_rms),
+	                      reverse(arelLong_rms),
+	                      reverse(arelLat_rms),
+	                      reverse(orientation_rms),
+	                      std::bitset<5>{},
+	                      reverse(probOfExist),
+	                      reverse(measState),
+	                      std::bitset<10>{});
 }
 
-object_ext_info::object_ext_info(const std::bitset<64> &payload) {
-	id = slice_bitset<0, 8>(payload);
-	arelLong = slice_bitset<8, 11>(payload);
-	arelLat = slice_bitset<19, 9>(payload);
-	objectClass = slice_bitset<24, 3>(payload);
-	orientationAngle = slice_bitset<32, 10>(payload);
-	length = slice_bitset<48, 8>(payload);
-	width = slice_bitset<56, 8>(payload);
-}
+Object_ext_info::Object_ext_info(
+		const std::bitset<64> &payload) :
+		id{reverse_slice<0, 8>(payload)},
+		arelLong{reverse_slice<8, 11>(payload)},
+		arelLat{reverse_slice<19, 9>(payload)},
+		objectClass{reverse_slice<29, 3>(payload)},
+		orientationAngle{reverse_slice<32, 10>(payload)},
+		length{reverse_slice<48, 8>(payload)},
+		width{reverse_slice<56, 8>(payload)} {}
 
-void object_ext_info::print(std::ostream &os) const {
-	os << "object_ext_info:\n" <<
-	   "  id: " << id.to_ulong() << '\n' <<
+void Object_ext_info::print(std::ostream &os) const {
+	os << "Object_ext_info:\n";
+	print_bitset64(os, to_payload());
+	os << "  id: " << id.to_ulong() << '\n' <<
 	   "  arelLong: " << arelLong.to_ulong() << '\n' <<
 	   "  arelLat: " << arelLat.to_ulong() << '\n' <<
 	   "  objectClass: " << objectClass.to_ulong() << '\n' <<
@@ -134,19 +151,22 @@ void object_ext_info::print(std::ostream &os) const {
 	   "  width: " << width.to_ulong() << '\n';
 }
 
-std::bitset<64> object_ext_info::to_payload() {
-	return std::bitset<64>{id.to_string() +
-	                       arelLong.to_string() +
-	                       objectClass.to_string() +
-	                       arelLat.to_string() +
-	                       orientationAngle.to_string() +
-	                       length.to_string() +
-	                       width.to_string()};
+std::bitset<64> Object_ext_info::to_payload() const {
+	return concat_bitsets(reverse(id),
+	                      reverse(arelLong),
+	                      reverse(arelLat),
+	                      std::bitset<1>{},
+	                      reverse(objectClass),
+	                      reverse(orientationAngle),
+	                      std::bitset<6>{},
+	                      reverse(length),
+	                      reverse(width));
 }
 
-void radar_config::print(std::ostream &os) const {
-	os << "object_ext_info:\n" <<
-	   "  maxDistance_valid: " << maxDistance_valid.to_ulong() << '\n' <<
+void Radar_config::print(std::ostream &os) const {
+	os << "Radar_config:\n";
+	print_bitset64(os, to_payload());
+	os << "  maxDistance_valid: " << maxDistance_valid.to_ulong() << '\n' <<
 	   "  sensorID_valid: " << sensorID_valid.to_ulong() << '\n' <<
 	   "  radarPower_valid: " << radarPower_valid.to_ulong() << '\n' <<
 	   "  outputType_valid: " << outputType_valid.to_ulong() << '\n' <<
@@ -168,25 +188,82 @@ void radar_config::print(std::ostream &os) const {
 	   "  rcsThreshold: " << rcsThreshold.to_ulong() << '\n';
 }
 
-std::bitset<64> radar_config::to_payload() {
-	return std::bitset<64>{maxDistance_valid.to_string() +
-	                       sensorID_valid.to_string() +
-	                       radarPower_valid.to_string() +
-	                       outputType_valid.to_string() +
-	                       sendQuality_valid.to_string() +
-	                       sendExtInfo_valid.to_string() +
-	                       sortIndex_valid.to_string() +
-	                       storeInNVM_valid.to_string() +
-	                       maxDistance.to_string() +
-	                       sensorID.to_string() +
-	                       outputType.to_string() +
-	                       radarPower.to_string() +
-	                       ctrlRelay_valid.to_string() +
-	                       ctrlRelay.to_string() +
-	                       sendQuality.to_string() +
-	                       sendExtInfo.to_string() +
-	                       sortIndex.to_string() +
-	                       storeInNVM.to_string() +
-	                       rcsThreshold_valid.to_string() +
-	                       rcsThreshold.to_string()};
+Radar_config::Radar_config(
+		const std::bitset<64> &payload) :
+		storeInNVM_valid{reverse_slice<0, 1>(payload)},
+		sortIndex_valid{reverse_slice<1, 1>(payload)},
+		sendExtInfo_valid{reverse_slice<2, 1>(payload)},
+		sendQuality_valid{reverse_slice<3, 1>(payload)},
+		outputType_valid{reverse_slice<4, 1>(payload)},
+		radarPower_valid{reverse_slice<5, 1>(payload)},
+		sensorID_valid{reverse_slice<6, 1>(payload)},
+		maxDistance_valid{reverse_slice<7, 1>(payload)},
+		maxDistance{reverse_slice<8, 10>(payload)},
+		radarPower{reverse_slice<32, 3>(payload)},
+		outputType{reverse_slice<35, 2>(payload)},
+		sensorID{reverse_slice<37, 3>(payload)},
+		storeInNVM{reverse_slice<40, 1>(payload)},
+		sortIndex{reverse_slice<41, 3>(payload)},
+		sendExtInfo{reverse_slice<44, 1>(payload)},
+		sendQuality{reverse_slice<45, 1>(payload)},
+		ctrlRelay{reverse_slice<46, 1>(payload)},
+		ctrlRelay_valid{reverse_slice<47, 1>(payload)},
+		rcsThreshold{reverse_slice<52, 3>(payload)},
+		rcsThreshold_valid{reverse_slice<55, 1>(payload)} {}
+
+std::bitset<64> Radar_config::to_payload() const {
+	return concat_bitsets(storeInNVM_valid,
+	                      sortIndex_valid,
+	                      sendExtInfo_valid,
+	                      sendQuality_valid,
+	                      outputType_valid,
+	                      radarPower_valid,
+	                      sensorID_valid,
+	                      maxDistance_valid,
+	                      reverse(maxDistance),
+	                      std::bitset<14>{},
+	                      reverse(radarPower),
+	                      reverse(outputType),
+	                      reverse(sensorID),
+	                      storeInNVM,
+	                      reverse(sortIndex),
+	                      sendExtInfo,
+	                      sendQuality,
+	                      ctrlRelay,
+	                      ctrlRelay_valid,
+	                      std::bitset<4>{},
+	                      reverse(rcsThreshold),
+	                      rcsThreshold_valid,
+	                      std::bitset<8>{});
+}
+
+Filter_config::Filter_config(const std::bitset<64> &payload) :
+		type{reverse_slice<0, 1>(payload)},
+		index{reverse_slice<1, 4>(payload)},
+		active{reverse_slice<5, 1>(payload)},
+		valid{reverse_slice<6, 1>(payload)},
+		min_distance{reverse_slice<12, 12>(payload)},
+		max_distance{reverse_slice<28, 12>(payload)} {}
+
+std::bitset<64> Filter_config::to_payload() const {
+	return concat_bitsets(type,
+	                      index,
+	                      active,
+	                      valid,
+	                      std::bitset<5>{},
+	                      reverse(min_distance),
+	                      std::bitset<4>{},
+	                      reverse(max_distance),
+	                      std::bitset<24>{});
+}
+
+void Filter_config::print(std::ostream &os) const {
+	os << "Filter_config:\n";
+	print_bitset64(os, to_payload());
+	os << "  type: " << type.to_ulong() << '\n' <<
+	   "  index: " << index.to_ulong() << '\n' <<
+	   "  active: " << active.to_ulong() << '\n' <<
+	   "  valid: " << valid.to_ulong() << '\n' <<
+	   "  min_distance: " << min_distance.to_ulong() << '\n' <<
+	   "  max_distance: " << max_distance.to_ulong() << '\n';
 }
