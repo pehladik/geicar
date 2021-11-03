@@ -31,7 +31,7 @@ TEST_CASE("test_bitset_reverse") {
 	REQUIRE(reverse(b3) == std::bitset<20>{"11010001111001100100"});
 }
 
-TEST_CASE("test_radar_config") {
+TEST_CASE("test_parse_message") {
 	SECTION("Object list status") {
 		std::uint32_t id = 0x60A;
 		std::uint8_t data[] = {0b00001110,

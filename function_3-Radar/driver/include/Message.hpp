@@ -18,7 +18,7 @@ struct Object_list_status : Message {
 	std::bitset<64> to_payload() const override;
 	std::bitset<8> nofObjects;          //number of objects
 	std::bitset<16> measCounter;        //measurement cycle counter
-	std::bitset<4> interfaceVersion;    //objectf list CAN interface version
+	std::bitset<4> interfaceVersion;    //object list CAN interface version
 	void print(std::ostream &os) const override;
 };
 
@@ -122,8 +122,8 @@ struct Filter_config : Message {
 	std::bitset<1> active;
 	std::bitset<4> index;
 	std::bitset<1> type;
-	std::bitset<12> min_distance;
-	std::bitset<12> max_distance;
+	std::bitset<12> minDistance;
+	std::bitset<12> maxDistance;
 	void print(std::ostream &os) const override;
 };
 

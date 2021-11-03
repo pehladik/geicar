@@ -242,8 +242,8 @@ Filter_config::Filter_config(const std::bitset<64> &payload) :
 		index{reverse_slice<1, 4>(payload)},
 		active{reverse_slice<5, 1>(payload)},
 		valid{reverse_slice<6, 1>(payload)},
-		min_distance{reverse_slice<12, 12>(payload)},
-		max_distance{reverse_slice<28, 12>(payload)} {}
+		minDistance{reverse_slice<12, 12>(payload)},
+		maxDistance{reverse_slice<28, 12>(payload)} {}
 
 std::bitset<64> Filter_config::to_payload() const {
 	return concat_bitsets(type,
@@ -251,9 +251,9 @@ std::bitset<64> Filter_config::to_payload() const {
 	                      active,
 	                      valid,
 	                      std::bitset<5>{},
-	                      reverse(min_distance),
+	                      reverse(minDistance),
 	                      std::bitset<4>{},
-	                      reverse(max_distance),
+	                      reverse(maxDistance),
 	                      std::bitset<24>{});
 }
 
@@ -264,6 +264,6 @@ void Filter_config::print(std::ostream &os) const {
 	   "  index: " << index.to_ulong() << '\n' <<
 	   "  active: " << active.to_ulong() << '\n' <<
 	   "  valid: " << valid.to_ulong() << '\n' <<
-	   "  min_distance: " << min_distance.to_ulong() << '\n' <<
-	   "  max_distance: " << max_distance.to_ulong() << '\n';
+	   "  min_distance: " << minDistance.to_ulong() << '\n' <<
+	   "  max_distance: " << maxDistance.to_ulong() << '\n';
 }
