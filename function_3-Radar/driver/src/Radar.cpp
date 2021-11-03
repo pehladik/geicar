@@ -7,7 +7,6 @@
 #include "Message.hpp"
 
 Radar::Radar(const std::string &serial_port) {
-#ifndef SIMULATE_RADAR
 	char *serial_port_c = new char[serial_port.length() + 1];
 	strcpy(serial_port_c, serial_port.c_str());
 	if (!simply_open(serial_port_c))
@@ -16,36 +15,20 @@ Radar::Radar(const std::string &serial_port) {
 		throw std::runtime_error{"Error initializing the CAN bus: " + get_last_error()};
 	if (!simply_start_can())
 		throw std::runtime_error{"Error starting the CAN bus: " + get_last_error()};
-#endif //SIMULATE_RADAR
 }
 
 std::unique_ptr<Message> Radar::receive() {
 	can_msg_t msg;
-#ifdef SIMULATE_RADAR
-	msg.payload[0] = 0b01111110;
-	msg.payload[1] = 0b00000000;
-	msg.payload[2] = 0b00100011;
-	msg.payload[3] = 0b00101111;
-	msg.payload[4] = 0b11111111;
-	msg.payload[5] = 0b11111111;
-	msg.payload[6] = 0b11111111;
-	msg.payload[7] = 0b11111111;
-	msg.ident = 0x60A;
-#else
-	int8_t received;
+	std::int8_t received;
 	do {
 		received = simply_receive(&msg);
 		if (received == -1)
 			throw std::runtime_error{"Error receiving CAN message: " + get_last_error()};
 	} while (!received);
-#endif //SIMULATE_RADAR
 	return parse_message(msg.ident, msg.payload);
 }
 
 std::string Radar::get_last_error() {
-#ifdef SIMULATE_RADAR
-	return "No error (simulating)";
-#else
 	int err = simply_get_last_error();
 	switch (err) {
 		case 0:
@@ -83,14 +66,11 @@ std::string Radar::get_last_error() {
 		default:
 			return "Unknown error";
 	}
-#endif //SIMULATE_RADAR
 }
 
 Radar::~Radar() {
-#ifndef SIMULATE_RADAR
 	if (!simply_close())
 		std::cout << "Error closing the CAN bus: " << get_last_error();
-#endif //SIMULATE_RADAR
 }
 
 std::unique_ptr<Message> Radar::parse_message(uint32_t id, std::uint8_t data[8]) {
@@ -112,4 +92,43 @@ std::unique_ptr<Message> Radar::parse_message(uint32_t id, std::uint8_t data[8])
 //	std::cout << "payload reversed = \n";
 //	print_bitset64(std::cout, payload_reversed);
 	return Message::parse(id, payload_reversed);
+}
+
+void Radar::dump_to_file(const std::filesystem::path &path, int nb_messages) {
+	can_msg_t msg;
+	std::int8_t received;
+	std::ofstream file{path};
+	for (int i = 0; i < nb_messages; ++i) {
+		received = simply_receive(&msg);
+		if (received == -1)
+			throw std::runtime_error{"Error receiving CAN message: " + get_last_error()};
+		file << msg.ident << " ";
+		for (std::uint8_t byte: msg.payload) {
+			unsigned tmp = byte;
+			file << tmp << " ";
+		}
+		file << "\n";
+	}
+	file.close();
+}
+
+SimulatedRadar::SimulatedRadar(const std::filesystem::path &path) : file{path} {}
+
+std::unique_ptr<Message> SimulatedRadar::receive() {
+	std::uint8_t data[8];
+	std::uint32_t id;
+	file >> id;
+	for (std::uint8_t &byte: data) {
+		unsigned tmp;
+		file >> tmp;
+		byte = static_cast<std::uint8_t>(tmp);
+	}
+	if (file.good())
+		return Radar::parse_message(id, data);
+	else
+		return nullptr;
+}
+
+SimulatedRadar::~SimulatedRadar() {
+	file.close();
 }
