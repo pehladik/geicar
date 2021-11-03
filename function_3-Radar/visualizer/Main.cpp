@@ -4,7 +4,10 @@
 int main(int argc, char **argv) {
 //	RadarVisualizer app{"/dev/ttyACM1"};
 //	app.start();
+
 //	Radar radar{"/dev/ttyACM1"};
+//	radar.dump_to_file("radar_dump.txt", 200);
+
 	if (argc != 2) {
 		throw std::runtime_error{"One argument expected: path to the dump file"};
 	}

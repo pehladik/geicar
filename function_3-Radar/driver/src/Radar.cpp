@@ -99,9 +99,11 @@ void Radar::dump_to_file(const std::filesystem::path &path, int nb_messages) {
 	std::int8_t received;
 	std::ofstream file{path};
 	for (int i = 0; i < nb_messages; ++i) {
-		received = simply_receive(&msg);
-		if (received == -1)
-			throw std::runtime_error{"Error receiving CAN message: " + get_last_error()};
+		do {
+			received = simply_receive(&msg);
+			if (received == -1)
+				throw std::runtime_error{"Error receiving CAN message: " + get_last_error()};
+		} while (!received);
 		file << msg.ident << " ";
 		for (std::uint8_t byte: msg.payload) {
 			unsigned tmp = byte;
