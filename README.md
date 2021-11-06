@@ -4,15 +4,19 @@ The GeiBike project is a project carried out by students at [INSA Toulouse](http
 
 This repository is intended to provide a basis for students starting a new project on the GeiBike. The present code as well as the documentation is the result of the combination of the various projects carried out by:
 
-* TBD
+* Matis Delcourt
+* Nicolas Fercoq
+* Marcos Frances
+* Mathilde Ibled
+* Yiannis Manzo
+* Yohan Simard
 
 The platform is (or was) developped and maintained by :
 
 * LOMBARD Emmanuel
 * MARTIN José
-* BOUBACAR ALZOUMA Abdou Rahamane 
+* BOUBACAR ALZOUMA Abdou Rahamane
 * DI MERCURIO Sébastien
-
 
 The projects are (or were) surpervised by:
 
@@ -21,4 +25,20 @@ The projects are (or were) surpervised by:
 
 ## Quick User Guide
 
-TBD
+### Requirements
+
+- Linux or WSL
+- Any C++ compiler (`sudo apt install build-essential`)
+- CMake
+
+### Building
+
+Clone the project and cd into it. Then run the following commands:
+
+```bash
+mkdir build
+cd build
+cmake ..
+cmake --build . --target radar_visualizer
+function_3-Radar/radar_visualizer
+```
