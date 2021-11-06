@@ -10,21 +10,23 @@ struct Message {
 	virtual std::bitset<64> to_payload() const = 0;
 	virtual void print(std::ostream &os) const = 0;
 	friend std::ostream &operator<<(std::ostream &os, const Message &msg);
+	virtual ~Message() = default;
 };
 
 //0x60A : Object list status
-struct Object_list_status : Message {
-	explicit Object_list_status(const std::bitset<64> &payload);
+struct ObjectListStatus : Message {
+	explicit ObjectListStatus(const std::bitset<64> &payload);
 	std::bitset<64> to_payload() const override;
 	std::bitset<8> nofObjects;          //number of objects
 	std::bitset<16> measCounter;        //measurement cycle counter
 	std::bitset<4> interfaceVersion;    //object list CAN interface version
 	void print(std::ostream &os) const override;
+	virtual ~ObjectListStatus() = default;
 };
 
 //0x60B : Object General information
-struct Object_general_info : Message {
-	explicit Object_general_info(const std::bitset<64> &payload);
+struct ObjectGeneralInfo : Message {
+	explicit ObjectGeneralInfo(const std::bitset<64> &payload);
 	std::bitset<64> to_payload() const override;
 	std::bitset<8> id;                  //Object ID
 	std::bitset<13> distLong;           //Longitudinal coordinate (x)
@@ -34,20 +36,12 @@ struct Object_general_info : Message {
 	std::bitset<9> vrelLat;             //Relative velocity in lateral direction (y)
 	std::bitset<8> rcs;                 //Radar cross-section
 	void print(std::ostream &os) const override;
-
-	static constexpr double OBJECT_DIST_RES = 0.2;
-	static constexpr double OBJECT_DIST_LONG_MIN = -500;
-	static constexpr double OBJECT_DIST_LAT_MIN = -204.6;
-	static constexpr double OBJECT_VREL_RES = 0.25;
-	static constexpr double OBJECT_VREL_LONG_MIN = -128.0;
-	static constexpr double OBJECT_VREL_LAT_MIN = -64.0;
-	static constexpr double OBJECT_RCS_RES = 0.5;
-	static constexpr double OBJECT_RCS_MIN = -64.0;
+	virtual ~ObjectGeneralInfo() = default;
 };
 
 //0x60C : Object quality information
-struct Object_quality_info : Message {
-	explicit Object_quality_info(const std::bitset<64> &payload);
+struct ObjectQualityInfo : Message {
+	explicit ObjectQualityInfo(const std::bitset<64> &payload);
 	std::bitset<64> to_payload() const override;
 	std::bitset<8> id;                  //Object ID
 	std::bitset<5> distLong_rms;        //Standard deviation of longitudinal distance
@@ -60,13 +54,12 @@ struct Object_quality_info : Message {
 	std::bitset<3> measState;           //Measurement state (if the object is valid)
 	std::bitset<3> probOfExist;         //Probability of existence
 	void print(std::ostream &os) const override;
-
-	static constexpr std::array<double, 8> PROB_OF_EXIST = {0.00, 0.25, 0.5, 0.75, 0.90, 0.99, 0.999, 1.0};
+	virtual ~ObjectQualityInfo() = default;
 };
 
 //0x60D : Object Extended Information
-struct Object_ext_info : Message {
-	explicit Object_ext_info(const std::bitset<64> &payload);
+struct ObjectExtInfo : Message {
+	explicit ObjectExtInfo(const std::bitset<64> &payload);
 	std::bitset<64> to_payload() const override;
 	std::bitset<8> id;                  //Object ID
 	std::bitset<11> arelLong;           //Relative acceleration in longitudinal direction
@@ -76,20 +69,12 @@ struct Object_ext_info : Message {
 	std::bitset<8> length;              //Length of the tracked object
 	std::bitset<8> width;               //Width of the tracked object
 	void print(std::ostream &os) const override;
-
-	static constexpr double OBJECT_AREL_RES = 0.01;
-	static constexpr double OBJECT_AREL_LONG_MIN = -10.0;
-	static constexpr double OBJECT_AREL_LAT_MIN = -2.5;
-	static constexpr double OBJECT_ORIENTATION_ANGEL_MIN = -180.0;
-	static constexpr double OBJECT_ORIENTATION_ANGEL_RES = 0.4;
-	static constexpr double OBJECT_WIDTH_RES = 0.2;
-	static constexpr double OBJECT_LENGTH_RES = 0.2;
-
+	virtual ~ObjectExtInfo() = default;
 };
 
 //0x200 : Radar Configuration
-struct Radar_config : Message {
-	explicit Radar_config(const std::bitset<64> &payload);
+struct RadarConfig : Message {
+	explicit RadarConfig(const std::bitset<64> &payload);
 	std::bitset<64> to_payload() const override;
 	std::bitset<1> maxDistance_valid;
 	std::bitset<1> sensorID_valid;
@@ -112,11 +97,12 @@ struct Radar_config : Message {
 	std::bitset<1> rcsThreshold_valid;
 	std::bitset<3> rcsThreshold;
 	void print(std::ostream &os) const override;
+	virtual ~RadarConfig() = default;
 };
 
 //0x202 : Object Filter Config
-struct Filter_config : Message {
-	explicit Filter_config(const std::bitset<64> &payload);
+struct FilterConfig : Message {
+	explicit FilterConfig(const std::bitset<64> &payload);
 	std::bitset<64> to_payload() const override;
 	std::bitset<1> valid;
 	std::bitset<1> active;
@@ -125,6 +111,7 @@ struct Filter_config : Message {
 	std::bitset<12> minDistance;
 	std::bitset<12> maxDistance;
 	void print(std::ostream &os) const override;
+	virtual ~FilterConfig() = default;
 };
 
 #endif //GEIFLIX_MESSAGE_HPP

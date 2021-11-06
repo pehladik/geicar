@@ -1,30 +1,27 @@
 #include <iostream>
-#include "Radar.hpp"
+#include "RadarVisualizer.hpp"
 
 int main(int argc, char **argv) {
-//	RadarVisualizer app{"/dev/ttyACM1"};
-//	app.start();
-
-//	Radar radar{"/dev/ttyACM1"};
-//	radar.dump_to_file("radar_dump.txt", 200);
-
 	if (argc != 2) {
 		throw std::runtime_error{"One argument expected: path to the dump file"};
 	}
-	SimulatedRadar sim_radar{argv[1]};
-	std::unique_ptr<Message> msg;
-	msg = sim_radar.receive();
+	RadarVisualizer app{argv[1], true};
+	app.start();
 
-	while (msg != nullptr) {
-		try {
-			std::cout << *msg;
-			auto object_list = dynamic_cast<Object_list_status *>(msg.get());
-			if (object_list) {
-				std::cout << object_list->nofObjects.to_ulong() << std::endl;
-			}
-			msg = sim_radar.receive();
-		} catch (const std::runtime_error &e) {
-			std::cout << e.what() << '\n';
-		}
-	}
+//	SimulatedRadar sim_radar{argv[1]};
+//	std::unique_ptr<Message> msg;
+//
+//	while (true) {
+//		try {
+//			msg = sim_radar.receive();
+//			if (msg == nullptr) break;
+//			std::cout << *msg << '\n';
+//			auto object_list = dynamic_cast<Object_list_status *>(msg.get());
+//			if (object_list) {
+//				std::cout << object_list->nofObjects.to_ulong() << std::endl;
+//			}
+//		} catch (const std::runtime_error &e) {
+//			std::cout << e.what() << '\n';
+//		}
+//	}
 }

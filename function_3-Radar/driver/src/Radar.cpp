@@ -3,10 +3,12 @@
 #include <cstring>
 #include <iostream>
 #include <util.hpp>
+#include <algorithm>
+#include <cassert>
 #include "simply.h"
 #include "Message.hpp"
 
-Radar::Radar(const std::string &serial_port) {
+RealRadar::RealRadar(const std::string &serial_port) {
 	char *serial_port_c = new char[serial_port.length() + 1];
 	strcpy(serial_port_c, serial_port.c_str());
 	if (!simply_open(serial_port_c))
@@ -17,18 +19,18 @@ Radar::Radar(const std::string &serial_port) {
 		throw std::runtime_error{"Error starting the CAN bus: " + get_last_error()};
 }
 
-std::unique_ptr<Message> Radar::receive() {
+std::unique_ptr<Message> RealRadar::receive() {
 	can_msg_t msg;
 	std::int8_t received;
-	do {
-		received = simply_receive(&msg);
-		if (received == -1)
-			throw std::runtime_error{"Error receiving CAN message: " + get_last_error()};
-	} while (!received);
+	received = simply_receive(&msg);
+	if (received == -1)
+		throw std::runtime_error{"Error receiving CAN message: " + get_last_error()};
+	if (received == 0)
+		return nullptr;
 	return parse_message(msg.ident, msg.payload);
 }
 
-std::string Radar::get_last_error() {
+std::string RealRadar::get_last_error() {
 	int err = simply_get_last_error();
 	switch (err) {
 		case 0:
@@ -68,7 +70,7 @@ std::string Radar::get_last_error() {
 	}
 }
 
-Radar::~Radar() {
+RealRadar::~RealRadar() {
 	if (!simply_close())
 		std::cout << "Error closing the CAN bus: " << get_last_error();
 }
@@ -94,7 +96,7 @@ std::unique_ptr<Message> Radar::parse_message(uint32_t id, std::uint8_t data[8])
 	return Message::parse(id, payload_reversed);
 }
 
-void Radar::dump_to_file(const std::filesystem::path &path, int nb_messages) {
+void RealRadar::dump_to_file(const std::filesystem::path &path, int nb_messages) {
 	can_msg_t msg;
 	std::int8_t received;
 	std::ofstream file{path};
@@ -114,7 +116,57 @@ void Radar::dump_to_file(const std::filesystem::path &path, int nb_messages) {
 	file.close();
 }
 
-SimulatedRadar::SimulatedRadar(const std::filesystem::path &path) : file{path} {}
+void RealRadar::process() {
+	while (true) {
+		try {
+			auto msg = receive();
+			std::cout << *msg;
+			if (!msg)
+				break;
+			if (dynamic_cast<ObjectListStatus *>(msg.get())) {
+				generate_measure();
+			}
+			message_queue.push_back(std::move(msg));
+		} catch (const std::runtime_error &e) {
+			std::cout << e.what() << '\n';
+		}
+	}
+}
+
+void Radar::generate_measure() {
+	std::optional<ObjectListStatus> object_list{};
+	while (object_list == std::nullopt && !message_queue.empty()) {
+		object_list = *dynamic_cast<ObjectListStatus *>(message_queue.front().get());
+		message_queue.pop_front();
+	}
+
+	if (object_list) {
+		std::vector<ObjectGeneralInfo> general_info_list{};
+		std::vector<ObjectQualityInfo> quality_info_list{};
+		std::vector<ObjectExtInfo> ext_info_list{};
+		for (auto &&msg: message_queue) {
+			if (auto general_info = dynamic_cast<ObjectGeneralInfo *>(msg.get())) {
+				general_info_list.emplace_back(*general_info);
+			}
+			if (auto quality_info = dynamic_cast<ObjectQualityInfo *>(msg.get())) {
+				quality_info_list.emplace_back(*quality_info);
+			}
+			if (auto ext_info = dynamic_cast<ObjectExtInfo *>(msg.get())) {
+				ext_info_list.emplace_back(*ext_info);
+			}
+		}
+		std::cout << "generating a new measure...\n";
+		measure = Measure{object_list.value(), general_info_list, quality_info_list, ext_info_list};
+	}
+
+	message_queue.clear();
+}
+
+SimulatedRadar::SimulatedRadar(const std::filesystem::path &path) : file{path} {
+	if (!file.good()) {
+		throw std::runtime_error{"Failed to open the file " + path.string()};
+	}
+}
 
 std::unique_ptr<Message> SimulatedRadar::receive() {
 	std::uint8_t data[8];
@@ -129,6 +181,23 @@ std::unique_ptr<Message> SimulatedRadar::receive() {
 		return Radar::parse_message(id, data);
 	else
 		return nullptr;
+}
+
+void SimulatedRadar::process() {
+	for (int i = 0; i < 1; ++i) {
+		try {
+			auto msg = receive();
+			if (!msg)
+				break;
+			std::cout << *msg;
+			if (dynamic_cast<ObjectListStatus *>(msg.get())) {
+				generate_measure();
+			}
+			message_queue.push_back(std::move(msg));
+		} catch (const std::runtime_error &e) {
+			std::cout << e.what() << '\n';
+		}
+	}
 }
 
 SimulatedRadar::~SimulatedRadar() {
