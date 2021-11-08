@@ -11,6 +11,7 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 	g.textSize(30);
 	g.strokeWeight(2);
 	g.stroke({0, 0, 0, 1});
+	g.noFill();
 
 	if (radar->measure.has_value()) {
 		auto &measure = radar->measure.value();
@@ -18,8 +19,10 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 		g.text(std::to_string(nObjects), 50, 50);
 		for (int i = 0; i < nObjects; i++) {
 			const Object &object = measure.objects[i];
-			g.rect((object.distance_lat - Object::DIST_LAT_MIN) / 2,
-			       (object.distance_long - Object::DIST_LONG_MIN) / 2, 25, 25);
+			const double x = (object.distance_lat - Object::DIST_LAT_MIN - 200) * 50;
+			const double y = (object.distance_long - Object::DIST_LONG_MIN - 500) * 50;
+//			std::cout << x << ", " << y << '\n';
+			g.ellipse(x, y, 10 * sqrt(object.radar_cross_section), 10 * sqrt(object.radar_cross_section));
 		}
 	}
 
@@ -42,8 +45,8 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 }
 
 RadarVisualizer::RadarVisualizer(const std::string &path, bool simulate)
-		: piksel::BaseApp((Object::DIST_LAT_MAX - Object::DIST_LAT_MIN) / 2,
-		                  (Object::DIST_LONG_MAX - Object::DIST_LONG_MIN) / 2) {
+		: piksel::BaseApp(1700, /*(Object::DIST_LAT_MAX - Object::DIST_LAT_MIN) / 2,*/
+		                  800) { /*(Object::DIST_LONG_MAX - Object::DIST_LONG_MIN) / 2) {*/
 	if (simulate) {
 		radar = std::make_unique<SimulatedRadar>(path);
 	} else {

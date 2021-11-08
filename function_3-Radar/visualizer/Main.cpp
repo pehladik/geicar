@@ -3,9 +3,11 @@
 
 int main(int argc, char **argv) {
 	if (argc != 2) {
-		throw std::runtime_error{"One argument expected: path to the dump file"};
+		throw std::runtime_error{"One argument expected: path to the dump file or to the USB to CAN device"};
 	}
-	RadarVisualizer app{argv[1], true};
+	const std::string arg = argv[1];
+	const bool simulate = arg.substr(arg.size() - 4) == ".txt";
+	RadarVisualizer app{arg, simulate};
 	app.start();
 
 //	SimulatedRadar sim_radar{argv[1]};

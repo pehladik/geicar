@@ -120,9 +120,9 @@ void RealRadar::process() {
 	while (true) {
 		try {
 			auto msg = receive();
-			std::cout << *msg;
 			if (!msg)
 				break;
+//			std::cout << *msg;
 			if (dynamic_cast<ObjectListStatus *>(msg.get())) {
 				generate_measure();
 			}
@@ -134,9 +134,9 @@ void RealRadar::process() {
 }
 
 void Radar::generate_measure() {
-	std::optional<ObjectListStatus> object_list{};
-	while (object_list == std::nullopt && !message_queue.empty()) {
-		object_list = *dynamic_cast<ObjectListStatus *>(message_queue.front().get());
+	ObjectListStatus *object_list{};
+	while (object_list == nullptr && !message_queue.empty()) {
+		object_list = dynamic_cast<ObjectListStatus *>(message_queue.front().get());
 		message_queue.pop_front();
 	}
 
@@ -155,8 +155,8 @@ void Radar::generate_measure() {
 				ext_info_list.emplace_back(*ext_info);
 			}
 		}
-		std::cout << "generating a new measure...\n";
-		measure = Measure{object_list.value(), general_info_list, quality_info_list, ext_info_list};
+//		std::cout << "generating a new measure...\n";
+		measure = Measure{*object_list, general_info_list, quality_info_list, ext_info_list};
 	}
 
 	message_queue.clear();
@@ -189,7 +189,7 @@ void SimulatedRadar::process() {
 			auto msg = receive();
 			if (!msg)
 				break;
-			std::cout << *msg;
+//			std::cout << *msg;
 			if (dynamic_cast<ObjectListStatus *>(msg.get())) {
 				generate_measure();
 			}
