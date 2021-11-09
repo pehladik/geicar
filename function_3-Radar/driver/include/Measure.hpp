@@ -10,7 +10,22 @@ struct QualityInformation {
 	static constexpr std::array<double, 8> PROB_OF_EXISTENCE = {0.00, 0.25, 0.5, 0.75, 0.90, 0.99, 0.999, 1.0};
 };
 
+enum struct ObjectClass {
+	point = 0x0,
+	car = 0x1,
+	truck = 0x2,
+	pedestrian = 0x3,
+	motorcycle = 0x4,
+	bicycle = 0x5,
+	wide = 0x6,
+	reserved = 0x7
+};
+
 struct ExtendedInformation {
+	ExtendedInformation(const ObjectExtInfo &ext_info);
+	unsigned id;
+	ObjectClass object_class;
+
 	static constexpr double AREL_RES = 0.01;
 	static constexpr double AREL_LONG_MIN = -10.0;
 	static constexpr double AREL_LAT_MIN = -2.5;
@@ -26,6 +41,7 @@ struct CollisionDetectionWarning {
 
 struct Object {
 	Object(const ObjectGeneralInfo &general_info);
+	Object(const ObjectGeneralInfo &general_info, const ObjectExtInfo &ext_info_message);
 	enum struct DynamicProperty {
 		MOVING = 0x0,
 		STATIONARY = 0x1,
