@@ -8,7 +8,7 @@
 
 struct QualityInformation {
 	static constexpr std::array<double, 8> PROB_OF_EXISTENCE = {0.00, 0.25, 0.5, 0.75, 0.90, 0.99, 0.999, 1.0};
-	QualityInformation(const ObjectQualityInfo &qual);
+	QualityInformation(const message::ObjectQualityInfo &quality_info_msg);
 	double probability_of_existence;
 };
 
@@ -24,7 +24,7 @@ enum struct ObjectClass {
 };
 
 struct ExtendedInformation {
-	ExtendedInformation(const ObjectExtInfo &ext_info);
+	ExtendedInformation(const message::ObjectExtInfo &extended_info_msg);
 	unsigned id;
 	ObjectClass object_class;
 
@@ -42,10 +42,10 @@ struct CollisionDetectionWarning {
 };
 
 struct Object {
-	Object(const ObjectGeneralInfo &general_info);
-	Object(const ObjectGeneralInfo &general_info, const ObjectExtInfo &ext_info_message);
-	Object(const ObjectGeneralInfo &general_info, const ObjectExtInfo &ext_info_message,
-	       const ObjectQualityInfo &qual_info_message);
+	Object(const message::ObjectGeneralInfo &general_info_msg);
+	Object(const message::ObjectGeneralInfo &general_info_msg, const message::ObjectExtInfo &extended_info_msg);
+	Object(const message::ObjectGeneralInfo &general_info_msg, const message::ObjectExtInfo &extended_info_msg,
+	       const message::ObjectQualityInfo &quality_info_msg);
 	enum struct DynamicProperty {
 		MOVING = 0x0,
 		STATIONARY = 0x1,
@@ -81,10 +81,10 @@ struct Object {
 };
 
 struct Measure {
-	Measure(const ObjectListStatus &object_list_status,
-	        const std::vector<ObjectGeneralInfo> &general_info,
-	        const std::vector<ObjectQualityInfo> &quality_info,
-	        const std::vector<ObjectExtInfo> &extended_info);
+	Measure(const message::ObjectListStatus &list_status_msg,
+	        const std::vector<message::ObjectGeneralInfo> &general_info_msg,
+	        const std::vector<message::ObjectQualityInfo> &quality_info_msg,
+	        const std::vector<message::ObjectExtInfo> &extended_info_msg);
 	unsigned counter;
 	std::vector<Object> objects;
 };

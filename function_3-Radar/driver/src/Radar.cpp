@@ -7,6 +7,8 @@
 #include "simply.h"
 #include "Message.hpp"
 
+using namespace message;
+
 Radar::Radar(const std::optional<std::filesystem::path> &dump_file_path) : dump_file{dump_file_path} {
 	if (dump_file.has_value() && !dump_file->good()) {
 		throw std::runtime_error{"Failed to open the file " + dump_file_path->string()};
@@ -30,13 +32,13 @@ void Radar::process() {
 	}
 }
 
-std::unique_ptr<Message> Radar::parse_message(uint32_t id, std::uint8_t data[8]) {
+std::unique_ptr<MessageBase> Radar::parse_message(uint32_t id, std::uint8_t data[8]) {
 	std::bitset<64> payload_reversed = 0;
 	for (int i = 0; i < 8; ++i) {
 		std::uint64_t reversed_payload_byte = reverse_byte(data[i]);
 		payload_reversed |= reversed_payload_byte << (i * 8);
 	}
-	return Message::parse(id, payload_reversed);
+	return MessageBase::parse(id, payload_reversed);
 }
 
 void Radar::generate_measure() {
@@ -84,7 +86,7 @@ void RealRadar::init_can(const std::string &serial_port) {
 		throw std::runtime_error{"Error starting the CAN bus: " + get_last_error()};
 }
 
-std::unique_ptr<Message> RealRadar::receive() {
+std::unique_ptr<MessageBase> RealRadar::receive() {
 	can_msg_t msg;
 	std::int8_t received;
 	received = simply_receive(&msg);
@@ -174,7 +176,7 @@ SimulatedRadar::SimulatedRadar(const std::filesystem::path &path,
 	}
 }
 
-std::unique_ptr<Message> SimulatedRadar::receive() {
+std::unique_ptr<MessageBase> SimulatedRadar::receive() {
 	using namespace std::chrono;
 	std::uint8_t data[8];
 	std::uint32_t id;

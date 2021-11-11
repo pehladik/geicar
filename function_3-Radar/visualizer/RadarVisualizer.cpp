@@ -48,9 +48,9 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 		g.text(std::to_string(nObjects), 50, 50);
 		for (int i = 0; i < nObjects; i++) {
 			const Object &object = measure.objects[i];
-//			if (object.quality_info->probability_of_existence < 0.5) {
-//				continue;
-//			}
+			if (object.quality_info->probability_of_existence < 0.999) {
+				continue;
+			}
 			const double y = (object.distance_lat - Object::DIST_LAT_MIN - 160) * 7;
 			const double x = (object.distance_long - Object::DIST_LONG_MIN - 450) * 7;
 			const auto dist = std::to_string(int(sqrt(x * x + y * y))) + "m";
@@ -70,7 +70,7 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 				g.ellipse(x, y, 10 * sqrt(object.radar_cross_section), 10 * sqrt(object.radar_cross_section));
 			} else if (object.extended_info->object_class == ObjectClass::point) {
 				g.stroke(blue);
-				g.strokeWeight(5);
+				g.strokeWeight(object.quality_info->probability_of_existence * 5);
 				g.point(x, y);
 				g.strokeWeight(2);
 			} else if (object.extended_info->object_class == ObjectClass::bicycle) {
