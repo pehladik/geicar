@@ -53,7 +53,7 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 			}
 			const double y = (object.distance_lat - Object::DIST_LAT_MIN - 160) * 7;
 			const double x = (object.distance_long - Object::DIST_LONG_MIN - 450) * 7;
-			const auto dist = std::to_string(int(sqrt(x * x + y * y))) + "m";
+			const auto dist = std::to_string(int(sqrt(pow(object.distance_lat, 2) + pow(object.distance_long, 2)))) + "m";
 			g.textSize(15);
 			g.strokeWeight(1);
 			g.noStroke();
