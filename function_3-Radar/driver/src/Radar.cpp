@@ -4,11 +4,76 @@
 #include <iostream>
 #include <util.hpp>
 #include <algorithm>
-#include <cassert>
 #include "simply.h"
 #include "Message.hpp"
 
-RealRadar::RealRadar(const std::string &serial_port) {
+Radar::Radar(const std::optional<std::filesystem::path> &dump_file_path) : dump_file{dump_file_path} {
+	if (dump_file.has_value() && !dump_file->good()) {
+		throw std::runtime_error{"Failed to open the file " + dump_file_path->string()};
+	}
+}
+
+void Radar::process() {
+	while (true) {
+		try {
+			auto msg = receive();
+			if (!msg)
+				break;
+//			std::cout << *msg;
+			if (dynamic_cast<ObjectListStatus *>(msg.get())) {
+				generate_measure();
+			}
+			message_queue.push_back(std::move(msg));
+		} catch (const std::runtime_error &e) {
+			std::cout << e.what() << '\n';
+		}
+	}
+}
+
+std::unique_ptr<Message> Radar::parse_message(uint32_t id, std::uint8_t data[8]) {
+	std::bitset<64> payload_reversed = 0;
+	for (int i = 0; i < 8; ++i) {
+		std::uint64_t reversed_payload_byte = reverse_byte(data[i]);
+		payload_reversed |= reversed_payload_byte << (i * 8);
+	}
+	return Message::parse(id, payload_reversed);
+}
+
+void Radar::generate_measure() {
+	ObjectListStatus *object_list{};
+	while (object_list == nullptr && !message_queue.empty()) {
+		object_list = dynamic_cast<ObjectListStatus *>(message_queue.front().get());
+		message_queue.pop_front();
+	}
+
+	if (object_list) {
+		std::vector<ObjectGeneralInfo> general_info_list{};
+		std::vector<ObjectQualityInfo> quality_info_list{};
+		std::vector<ObjectExtInfo> ext_info_list{};
+		for (auto &&msg: message_queue) {
+			if (auto general_info = dynamic_cast<ObjectGeneralInfo *>(msg.get())) {
+				general_info_list.emplace_back(*general_info);
+			}
+			if (auto quality_info = dynamic_cast<ObjectQualityInfo *>(msg.get())) {
+				quality_info_list.emplace_back(*quality_info);
+			}
+			if (auto ext_info = dynamic_cast<ObjectExtInfo *>(msg.get())) {
+				ext_info_list.emplace_back(*ext_info);
+			}
+		}
+//		std::cout << "generating a new measure...\n";
+		measure = Measure{*object_list, general_info_list, quality_info_list, ext_info_list};
+	}
+
+	message_queue.clear();
+}
+
+RealRadar::RealRadar(const std::string &serial_port,
+                     const std::optional<std::filesystem::path> &dump_file_path) : Radar{dump_file_path} {
+	init_can(serial_port);
+}
+
+void RealRadar::init_can(const std::string &serial_port) {
 	char *serial_port_c = new char[serial_port.length() + 1];
 	strcpy(serial_port_c, serial_port.c_str());
 	if (!simply_open(serial_port_c))
@@ -27,6 +92,9 @@ std::unique_ptr<Message> RealRadar::receive() {
 		throw std::runtime_error{"Error receiving CAN message: " + get_last_error()};
 	if (received == 0)
 		return nullptr;
+	if (dump_file.has_value()) {
+		write_to_dump_file(msg.ident, msg.payload);
+	}
 	return parse_message(msg.ident, msg.payload);
 }
 
@@ -75,131 +143,69 @@ RealRadar::~RealRadar() {
 		std::cout << "Error closing the CAN bus: " << get_last_error();
 }
 
-std::unique_ptr<Message> Radar::parse_message(uint32_t id, std::uint8_t data[8]) {
-//	std::bitset<64> payload = 0;
-	std::bitset<64> payload_reversed = 0;
+void Radar::write_to_dump_file(uint32_t id, const std::uint8_t data[8]) {
+	using namespace std::chrono;
+	if (!dump_file.has_value()) {
+		return;
+	}
+	auto now = high_resolution_clock::now();
+	auto ms = duration_cast<milliseconds>(now - time_started).count();
+	*dump_file << ms << " " << id << " ";
 	for (int i = 0; i < 8; ++i) {
-//		std::uint64_t payload_byte = msg.payload[i];
-		std::uint64_t reversed_payload_byte = reverse_byte(data[i]);
-//		payload |= payload_byte << (i * 8);
-		payload_reversed |= reversed_payload_byte << (i * 8);
-//		std::cout << i << '\n';
-//		std::cout << std::bitset<64>{payload_byte << (i * 8)} << "\n";
-//		std::cout << std::bitset<64>{reversed_payload_byte << (i * 8)} << "\n";
-//		std::cout << payload.to_string() << "\n";
-//		std::cout << payload_reversed.to_string() << "\n";
+		*dump_file << static_cast<unsigned>(data[i]) << " ";
 	}
-//	std::cout << "payload = \n";
-//	print_bitset64(std::cout, payload);
-//	std::cout << "payload reversed = \n";
-//	print_bitset64(std::cout, payload_reversed);
-	return Message::parse(id, payload_reversed);
+	*dump_file << "\n";
 }
 
-void RealRadar::dump_to_file(const std::filesystem::path &path, int nb_messages) {
-	can_msg_t msg;
-	std::int8_t received;
-	std::ofstream file{path};
-	for (int i = 0; i < nb_messages; ++i) {
-		do {
-			received = simply_receive(&msg);
-			if (received == -1)
-				throw std::runtime_error{"Error receiving CAN message: " + get_last_error()};
-		} while (!received);
-		file << msg.ident << " ";
-		for (std::uint8_t byte: msg.payload) {
-			unsigned tmp = byte;
-			file << tmp << " ";
-		}
-		file << "\n";
-	}
-	file.close();
-}
 
-void RealRadar::process() {
-	while (true) {
-		try {
-			auto msg = receive();
-			if (!msg)
-				break;
-//			std::cout << *msg;
-			if (dynamic_cast<ObjectListStatus *>(msg.get())) {
-				generate_measure();
-			}
-			message_queue.push_back(std::move(msg));
-		} catch (const std::runtime_error &e) {
-			std::cout << e.what() << '\n';
-		}
-	}
-}
-
-void Radar::generate_measure() {
-	ObjectListStatus *object_list{};
-	while (object_list == nullptr && !message_queue.empty()) {
-		object_list = dynamic_cast<ObjectListStatus *>(message_queue.front().get());
-		message_queue.pop_front();
-	}
-
-	if (object_list) {
-		std::vector<ObjectGeneralInfo> general_info_list{};
-		std::vector<ObjectQualityInfo> quality_info_list{};
-		std::vector<ObjectExtInfo> ext_info_list{};
-		for (auto &&msg: message_queue) {
-			if (auto general_info = dynamic_cast<ObjectGeneralInfo *>(msg.get())) {
-				general_info_list.emplace_back(*general_info);
-			}
-			if (auto quality_info = dynamic_cast<ObjectQualityInfo *>(msg.get())) {
-				quality_info_list.emplace_back(*quality_info);
-			}
-			if (auto ext_info = dynamic_cast<ObjectExtInfo *>(msg.get())) {
-				ext_info_list.emplace_back(*ext_info);
-			}
-		}
-//		std::cout << "generating a new measure...\n";
-		measure = Measure{*object_list, general_info_list, quality_info_list, ext_info_list};
-	}
-
-	message_queue.clear();
-}
-
-SimulatedRadar::SimulatedRadar(const std::filesystem::path &path) : file{path} {
+SimulatedRadar::SimulatedRadar(const std::filesystem::path &path,
+                               const std::optional<std::filesystem::path> &dump_file_path) :
+		file{path}, Radar{dump_file_path} {
 	if (!file.good()) {
 		throw std::runtime_error{"Failed to open the file " + path.string()};
+	}
+	// Skip waiting before the first message
+	auto prev_position = file.tellg();
+	int first_message_time;
+	file >> first_message_time;
+	if (file.good()) {
+		time_started -= std::chrono::milliseconds(first_message_time);
+		file.seekg(prev_position);
 	}
 }
 
 std::unique_ptr<Message> SimulatedRadar::receive() {
+	using namespace std::chrono;
 	std::uint8_t data[8];
 	std::uint32_t id;
-	file >> id;
-	for (std::uint8_t &byte: data) {
-		unsigned tmp;
-		file >> tmp;
-		byte = static_cast<std::uint8_t>(tmp);
-	}
-	if (file.good())
-		return Radar::parse_message(id, data);
-	else
-		return nullptr;
-}
+	long message_ms;
+	auto prev_position = file.tellg();
 
-void SimulatedRadar::process() {
-	for (int i = 0; i < 1; ++i) {
-		try {
-			auto msg = receive();
-			if (!msg)
-				break;
-//			std::cout << *msg;
-			if (dynamic_cast<ObjectListStatus *>(msg.get())) {
-				generate_measure();
+	file >> message_ms;
+	if (!file.good())
+		return nullptr;
+
+	auto now = high_resolution_clock::now();
+	auto ms = duration_cast<milliseconds>(now - time_started).count();
+
+	if (message_ms > ms) {
+		file.seekg(prev_position);
+		return nullptr;
+	} else {
+		file >> id;
+		for (std::uint8_t &byte: data) {
+			unsigned tmp;
+			file >> tmp;
+			byte = static_cast<std::uint8_t>(tmp);
+		}
+		if (file.good()) {
+			if (dump_file.has_value()) {
+				write_to_dump_file(id, data);
 			}
-			message_queue.push_back(std::move(msg));
-		} catch (const std::runtime_error &e) {
-			std::cout << e.what() << '\n';
+			return Radar::parse_message(id, data);
+		} else {
+			return nullptr;
 		}
 	}
 }
 
-SimulatedRadar::~SimulatedRadar() {
-	file.close();
-}

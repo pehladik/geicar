@@ -8,6 +8,8 @@
 
 struct QualityInformation {
 	static constexpr std::array<double, 8> PROB_OF_EXISTENCE = {0.00, 0.25, 0.5, 0.75, 0.90, 0.99, 0.999, 1.0};
+	QualityInformation(const ObjectQualityInfo &qual);
+	double probability_of_existence;
 };
 
 enum struct ObjectClass {
@@ -42,6 +44,8 @@ struct CollisionDetectionWarning {
 struct Object {
 	Object(const ObjectGeneralInfo &general_info);
 	Object(const ObjectGeneralInfo &general_info, const ObjectExtInfo &ext_info_message);
+	Object(const ObjectGeneralInfo &general_info, const ObjectExtInfo &ext_info_message,
+	       const ObjectQualityInfo &qual_info_message);
 	enum struct DynamicProperty {
 		MOVING = 0x0,
 		STATIONARY = 0x1,
@@ -81,7 +85,7 @@ struct Measure {
 	        const std::vector<ObjectGeneralInfo> &general_info,
 	        const std::vector<ObjectQualityInfo> &quality_info,
 	        const std::vector<ObjectExtInfo> &extended_info);
-	int counter;
+	unsigned counter;
 	std::vector<Object> objects;
 };
 

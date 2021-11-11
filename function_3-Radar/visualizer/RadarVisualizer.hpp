@@ -7,7 +7,9 @@
 
 class RadarVisualizer : public piksel::BaseApp {
 public:
-	explicit RadarVisualizer(const std::string &path, bool simulate = false);
+	explicit RadarVisualizer(const std::filesystem::path &path,
+	                         bool simulate = false,
+	                         const std::optional<std::filesystem::path> &dump_file_path = std::nullopt);
 	void setup();
 	void draw(piksel::Graphics &g);
 
