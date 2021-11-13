@@ -17,6 +17,16 @@ Measure::Measure(const ObjectListStatus &list_status_msg,
 	}
 }
 
+std::ostream &operator<<(std::ostream &os, const Measure &measure) {
+	os << "Measure:\n" <<
+	   "  counter: " << measure.counter << '\n' <<
+	   "  objects:\n";
+	for (auto &&obj: measure.objects) {
+		os << "   -> " << obj << '\n';
+	}
+	return os;
+}
+
 Object::Object(const ObjectGeneralInfo &general_info_msg) :
 		id{static_cast<unsigned int>(general_info_msg.id.to_ulong())},
 		distance_long{DIST_LONG_MIN + static_cast<double>(general_info_msg.distLong.to_ulong()) * DIST_RES},
@@ -41,6 +51,13 @@ Object::Object(const ObjectGeneralInfo &general_info_msg, const ObjectExtInfo &e
 
 	extended_info = ExtendedInformation(extended_info_msg);
 	quality_info = QualityInformation(quality_info_msg);
+}
+
+std::ostream &operator<<(std::ostream &os, const Object &object) {
+	os << "id: " << object.id <<
+	   " distance_long: " << object.distance_long <<
+	   " distance_lat: " << object.distance_lat;
+	return os;
 }
 
 ExtendedInformation::ExtendedInformation(const ObjectExtInfo &extended_info_msg) :

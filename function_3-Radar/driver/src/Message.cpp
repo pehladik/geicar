@@ -18,6 +18,8 @@ namespace message {
 				return std::make_unique<ObjectExtInfo>(payload);
 			case 0x200:
 				return std::make_unique<RadarConfig>(payload);
+			case 0x201:
+				return std::make_unique<RadarState>(payload);
 			case 0x202:
 				return std::make_unique<FilterConfig>(payload);
 		}
@@ -266,4 +268,73 @@ namespace message {
 		   "  min_distance: " << minDistance.to_ulong() << '\n' <<
 		   "  max_distance: " << maxDistance.to_ulong() << '\n';
 	}
+
+	std::bitset<64> RadarState::to_payload() const {
+		return concat_bitsets(
+				NvmWriteStatus,
+				NvmReadStatus,
+				std::bitset<6>{},
+				maxDistanceCfg,
+				persistentError,
+				interference,
+				temperatureError,
+				temporaryError,
+				voltageError,
+				std::bitset<7>{},
+				radarPowerCfg,
+				sortIndex,
+				std::bitset<1>{},
+				sensorId,
+				motionRxState,
+				sendExtInfoCfg,
+				sendQualityCfg,
+				outputTypeCfg,
+				controlRelayCfg,
+				std::bitset<12>{},
+				rcsThreshold,
+				std::bitset<2>{}
+		);
+	}
+
+	RadarState::RadarState(const std::bitset<64> &payload) :
+			NvmWriteStatus{reverse_slice<0, 1>(payload)},
+			NvmReadStatus{reverse_slice<1, 1>(payload)},
+			maxDistanceCfg{reverse_slice<8, 10>(payload)},
+			persistentError{reverse_slice<18, 1>(payload)},
+			interference{reverse_slice<19, 1>(payload)},
+			temperatureError{reverse_slice<20, 1>(payload)},
+			temporaryError{reverse_slice<21, 1>(payload)},
+			voltageError{reverse_slice<22, 1>(payload)},
+			radarPowerCfg{reverse_slice<30, 3>(payload)},
+			sortIndex{reverse_slice<33, 3>(payload)},
+			sensorId{reverse_slice<37, 3>(payload)},
+			motionRxState{reverse_slice<40, 2>(payload)},
+			sendExtInfoCfg{reverse_slice<42, 1>(payload)},
+			sendQualityCfg{reverse_slice<43, 1>(payload)},
+			outputTypeCfg{reverse_slice<44, 2>(payload)},
+			controlRelayCfg{reverse_slice<46, 1>(payload)},
+			rcsThreshold{reverse_slice<59, 3>(payload)} {}
+
+	void RadarState::print(std::ostream &os) const {
+		os << "Radar_State:\n";
+		print_bitset64(os, to_payload());
+		os << "  NvmWriteStatus: " << NvmWriteStatus.to_ulong() << '\n' <<
+		   "  NvmReadStatus: " << NvmReadStatus.to_ulong() << '\n' <<
+		   "  maxDistanceCfg: " << maxDistanceCfg.to_ulong() << '\n' <<
+		   "  persistentError: " << persistentError.to_ulong() << '\n' <<
+		   "  interference: " << interference.to_ulong() << '\n' <<
+		   "  temperatureError: " << temperatureError.to_ulong() << '\n' <<
+		   "  temporaryError: " << temporaryError.to_ulong() << '\n' <<
+		   "  voltageError: " << voltageError.to_ulong() << '\n' <<
+		   "  radarPowerCfg: " << radarPowerCfg.to_ulong() << '\n' <<
+		   "  sortIndex: " << sortIndex.to_ulong() << '\n' <<
+		   "  sensorId: " << sensorId.to_ulong() << '\n' <<
+		   "  motionRxState: " << motionRxState.to_ulong() << '\n' <<
+		   "  sendExtInfoCfg: " << sendExtInfoCfg.to_ulong() << '\n' <<
+		   "  sendQualityCfg: " << sendQualityCfg.to_ulong() << '\n' <<
+		   "  outputTypeCfg: " << outputTypeCfg.to_ulong() << '\n' <<
+		   "  controlRelayCfg: " << controlRelayCfg.to_ulong() << '\n';
+
+	}
+
 }

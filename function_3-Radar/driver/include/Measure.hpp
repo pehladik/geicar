@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <optional>
+#include <ostream>
 #include "Message.hpp"
 
 
@@ -67,7 +68,7 @@ struct Object {
 	std::optional<QualityInformation> quality_info;
 	std::optional<ExtendedInformation> extended_info;
 	std::optional<CollisionDetectionWarning> collision_detection_warning;
-
+	friend std::ostream &operator<<(std::ostream &os, const Object &object);
 	static constexpr double DIST_RES = 0.2;
 	static constexpr double DIST_LONG_MIN = -500;
 	static constexpr double DIST_LONG_MAX = 1138.2;
@@ -87,6 +88,7 @@ struct Measure {
 	        const std::vector<message::ObjectExtInfo> &extended_info_msg);
 	unsigned counter;
 	std::vector<Object> objects;
+	friend std::ostream &operator<<(std::ostream &os, const Measure &measure);
 };
 
 #endif //GEIFLIX_MEASURE_HPP

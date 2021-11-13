@@ -25,6 +25,10 @@ void Radar::process() {
 			if (dynamic_cast<ObjectListStatus *>(msg.get())) {
 				generate_measure();
 			}
+			if (auto config = dynamic_cast<message::RadarState *>(msg.get())) {
+				state = ::RadarState(*config);
+//				std::cout << *state << '\n';
+			}
 			message_queue.push_back(std::move(msg));
 		} catch (const std::runtime_error &e) {
 			std::cout << e.what() << '\n';

@@ -9,16 +9,32 @@
 #include <chrono>
 #include "Message.hpp"
 #include "Measure.hpp"
+#include "Config.hpp"
 
 class Radar {
 public:
 	Radar(const std::optional<std::filesystem::path> &dump_file_path);
+
+	/**
+	 * Read all messages newly received and update the state and measure fields
+	 */
+	virtual void process();
+
+	virtual ~Radar() = default;
+
+	/**
+	 * The last parsed measure, or nullopt if not yet received
+	 */
+	std::optional<Measure> measure{std::nullopt};
+
+	/**
+	 * The last parsed radar state, or nullopt if not yet received
+	 */
+	std::optional<::RadarState> state{std::nullopt};
+
+protected:
 	virtual std::unique_ptr<message::MessageBase> receive() = 0;
 	static std::unique_ptr<message::MessageBase> parse_message(std::uint32_t id, std::uint8_t data[8]);
-	virtual void process();
-	virtual ~Radar() = default;
-	std::optional<Measure> measure{std::nullopt};
-protected:
 	void generate_measure();
 	void write_to_dump_file(uint32_t ident, const uint8_t data[8]);
 	std::deque<std::unique_ptr<message::MessageBase>> message_queue{};
@@ -28,22 +44,41 @@ protected:
 
 class RealRadar : public Radar {
 public:
+	/**
+	 * @param serial_port The port where the CAN/USB converter
+	 *                    is connected to (example: /dev/ttyACM1)
+	 * @param dump_file_path An optional path to create a dump file
+	 *                       with all the messages received during the session
+	 */
 	RealRadar(const std::string &serial_port,
 	          const std::optional<std::filesystem::path> &dump_file_path = std::nullopt);
-	std::unique_ptr<message::MessageBase> receive() override;
+
+	/**
+	 * @return the error string associated with the last SimplyCAN function call
+	 */
 	std::string get_last_error();
+
 	virtual ~RealRadar();
+
 private:
+	std::unique_ptr<message::MessageBase> receive() override;
 	void init_can(const std::string &serial_port);
 };
 
 class SimulatedRadar : public Radar {
 public:
+	/**
+	 * @param path The path to the dump file where the messages were previously saved
+	 * @param dump_file_path An optional path to create a dump file
+	 *                       with all the messages received during the session
+	 */
 	explicit SimulatedRadar(const std::filesystem::path &path,
 	                        const std::optional<std::filesystem::path> &dump_file_path = std::nullopt);
-	std::unique_ptr<message::MessageBase> receive() override;
+
 	virtual ~SimulatedRadar() = default;
+
 private:
+	std::unique_ptr<message::MessageBase> receive() override;
 	std::ifstream file;
 };
 

@@ -76,6 +76,7 @@ namespace message {
 
 //0x200 : Radar Configuration
 	struct RadarConfig : MessageBase {
+		RadarConfig() = default;
 		explicit RadarConfig(const std::bitset<64> &payload);
 		std::bitset<64> to_payload() const override;
 		std::bitset<1> maxDistance_valid;
@@ -115,6 +116,33 @@ namespace message {
 		void print(std::ostream &os) const override;
 		virtual ~FilterConfig() = default;
 	};
+
+	//0x201 : Radar Configuration
+	struct RadarState : MessageBase {
+		RadarState() = default;
+		explicit RadarState(const std::bitset<64> &payload);
+		std::bitset<64> to_payload() const override;
+		std::bitset<1> NvmWriteStatus;
+		std::bitset<1> NvmReadStatus;
+		std::bitset<10> maxDistanceCfg;
+		std::bitset<1> persistentError;
+		std::bitset<1> interference;
+		std::bitset<1> temperatureError;
+		std::bitset<1> temporaryError;
+		std::bitset<1> voltageError;
+		std::bitset<3> radarPowerCfg;
+		std::bitset<3> sortIndex;
+		std::bitset<3> sensorId;
+		std::bitset<2> motionRxState;
+		std::bitset<1> sendExtInfoCfg;
+		std::bitset<1> sendQualityCfg;
+		std::bitset<2> outputTypeCfg;
+		std::bitset<1> controlRelayCfg;
+		std::bitset<3> rcsThreshold;
+		void print(std::ostream &os) const override;
+		virtual ~RadarState() = default;
+	};
+
 }
 
 #endif //GEIFLIX_MESSAGE_HPP
