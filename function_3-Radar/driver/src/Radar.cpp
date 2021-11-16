@@ -149,6 +149,18 @@ RealRadar::~RealRadar() {
 		std::cout << "Error closing the CAN bus: " << get_last_error();
 }
 
+void RealRadar::send(std::unique_ptr<message::MessageBase> msg) {
+	std::cout << "Sending message :\n" << *msg;
+	can_msg_t can_msg{};
+	can_msg.ident = msg->get_id();
+	std::uint64_t payload = msg->to_payload().to_ullong();
+	for (int i = 0; i < 8; ++i) {
+		can_msg.payload[i] = (payload >> (i * 8) & 0xff);
+	}
+	can_msg.dlc = 8;
+	simply_send(&can_msg);
+}
+
 void Radar::write_to_dump_file(uint32_t id, const std::uint8_t data[8]) {
 	using namespace std::chrono;
 	if (!dump_file.has_value()) {
@@ -161,6 +173,10 @@ void Radar::write_to_dump_file(uint32_t id, const std::uint8_t data[8]) {
 		*dump_file << static_cast<unsigned>(data[i]) << " ";
 	}
 	*dump_file << "\n";
+}
+
+void Radar::send_config(const RadarConfiguration &config) {
+	send(std::make_unique<message::RadarConfig>(config.to_message()));
 }
 
 
@@ -213,5 +229,10 @@ std::unique_ptr<MessageBase> SimulatedRadar::receive() {
 			return nullptr;
 		}
 	}
+}
+
+void SimulatedRadar::send(std::unique_ptr<message::MessageBase> msg) {
+	std::cout << "Sending message :\n" << *msg;
+	std::cout << "Simulated radar -> skipping\n";
 }
 

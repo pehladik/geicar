@@ -30,6 +30,7 @@ enum struct RcsThreshold {
 };
 
 struct RadarConfiguration {
+	RadarConfiguration() = default;
 	RadarConfiguration(const message::RadarConfig &config_msg);
 	message::RadarConfig to_message() const;
 	std::optional<std::uint8_t> sensorID;

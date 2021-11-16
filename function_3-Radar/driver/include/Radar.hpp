@@ -18,7 +18,13 @@ public:
 	/**
 	 * Read all messages newly received and update the state and measure fields
 	 */
-	virtual void process();
+	void process();
+
+	/**
+	 * Sends a radar configuration message to the radar
+	 * @param config The configuration to send. All optional attributes that are not set are not modified.
+	 */
+	void send_config(const RadarConfiguration &config);
 
 	virtual ~Radar() = default;
 
@@ -34,6 +40,7 @@ public:
 
 protected:
 	virtual std::unique_ptr<message::MessageBase> receive() = 0;
+	virtual void send(std::unique_ptr<message::MessageBase> msg) = 0;
 	static std::unique_ptr<message::MessageBase> parse_message(std::uint32_t id, std::uint8_t data[8]);
 	void generate_measure();
 	void write_to_dump_file(uint32_t ident, const uint8_t data[8]);
@@ -61,7 +68,11 @@ public:
 	virtual ~RealRadar();
 
 private:
+protected:
+	void send(std::unique_ptr<message::MessageBase> msg) override;
+private:
 	std::unique_ptr<message::MessageBase> receive() override;
+
 	void init_can(const std::string &serial_port);
 };
 
@@ -79,6 +90,9 @@ public:
 
 private:
 	std::unique_ptr<message::MessageBase> receive() override;
+protected:
+	void send(std::unique_ptr<message::MessageBase> msg) override;
+private:
 	std::ifstream file;
 };
 

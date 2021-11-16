@@ -163,3 +163,9 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 		}
 	}
 }
+
+void RadarVisualizer::keyReleased(int key) {
+	RadarConfiguration config{};
+	config.maxDistance = 100.0;
+	radar->send_config(config);
+}

@@ -55,6 +55,10 @@ namespace message {
 		                      std::bitset<36>{});
 	}
 
+	uint32_t ObjectListStatus::get_id() {
+		return 0x60A;
+	}
+
 
 	ObjectGeneralInfo::ObjectGeneralInfo(const std::bitset<64> &payload) :
 			id{reverse_slice<0, 8>(payload)},
@@ -87,6 +91,10 @@ namespace message {
 		                      std::bitset<2>{},
 		                      reverse(dynProp),
 		                      reverse(rcs));
+	}
+
+	uint32_t ObjectGeneralInfo::get_id() {
+		return 0x60B;
 	}
 
 	ObjectQualityInfo::ObjectQualityInfo(const std::bitset<64> &payload) :
@@ -130,6 +138,10 @@ namespace message {
 		                      std::bitset<10>{});
 	}
 
+	uint32_t ObjectQualityInfo::get_id() {
+		return 0x60C;
+	}
+
 	ObjectExtInfo::ObjectExtInfo(
 			const std::bitset<64> &payload) :
 			id{reverse_slice<0, 8>(payload)},
@@ -162,6 +174,10 @@ namespace message {
 		                      std::bitset<6>{},
 		                      reverse(length),
 		                      reverse(width));
+	}
+
+	uint32_t ObjectExtInfo::get_id() {
+		return 0x60D;
 	}
 
 	void RadarConfig::print(std::ostream &os) const {
@@ -238,6 +254,10 @@ namespace message {
 		                      std::bitset<8>{});
 	}
 
+	uint32_t RadarConfig::get_id() {
+		return 0x200;
+	}
+
 	FilterConfig::FilterConfig(const std::bitset<64> &payload) :
 			type{reverse_slice<0, 1>(payload)},
 			index{reverse_slice<1, 4>(payload)},
@@ -267,6 +287,10 @@ namespace message {
 		   "  valid: " << valid.to_ulong() << '\n' <<
 		   "  min_distance: " << minDistance.to_ulong() << '\n' <<
 		   "  max_distance: " << maxDistance.to_ulong() << '\n';
+	}
+
+	uint32_t FilterConfig::get_id() {
+		return 0x202;
 	}
 
 	std::bitset<64> RadarState::to_payload() const {
@@ -335,6 +359,10 @@ namespace message {
 		   "  outputTypeCfg: " << outputTypeCfg.to_ulong() << '\n' <<
 		   "  controlRelayCfg: " << controlRelayCfg.to_ulong() << '\n';
 
+	}
+
+	uint32_t RadarState::get_id() {
+		return 0x201;
 	}
 
 }

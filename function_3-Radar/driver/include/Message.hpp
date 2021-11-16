@@ -9,6 +9,7 @@ namespace message {
 
 	struct MessageBase {
 		static std::unique_ptr<MessageBase> parse(std::uint32_t id, const std::bitset<64> &payload);
+		virtual std::uint32_t get_id() = 0;
 		virtual std::bitset<64> to_payload() const = 0;
 		virtual void print(std::ostream &os) const = 0;
 		friend std::ostream &operator<<(std::ostream &os, const MessageBase &msg);
@@ -18,6 +19,7 @@ namespace message {
 //0x60A : Object list status
 	struct ObjectListStatus : MessageBase {
 		explicit ObjectListStatus(const std::bitset<64> &payload);
+		uint32_t get_id() override;
 		std::bitset<64> to_payload() const override;
 		std::bitset<8> nofObjects;          //number of objects
 		std::bitset<16> measCounter;        //measurement cycle counter
@@ -29,6 +31,7 @@ namespace message {
 //0x60B : Object General information
 	struct ObjectGeneralInfo : MessageBase {
 		explicit ObjectGeneralInfo(const std::bitset<64> &payload);
+		uint32_t get_id() override;
 		std::bitset<64> to_payload() const override;
 		std::bitset<8> id;                  //Object ID
 		std::bitset<13> distLong;           //Longitudinal coordinate (x)
@@ -44,6 +47,7 @@ namespace message {
 //0x60C : Object quality information
 	struct ObjectQualityInfo : MessageBase {
 		explicit ObjectQualityInfo(const std::bitset<64> &payload);
+		uint32_t get_id() override;
 		std::bitset<64> to_payload() const override;
 		std::bitset<8> id;                  //Object ID
 		std::bitset<5> distLong_rms;        //Standard deviation of longitudinal distance
@@ -62,6 +66,7 @@ namespace message {
 //0x60D : Object Extended Information
 	struct ObjectExtInfo : MessageBase {
 		explicit ObjectExtInfo(const std::bitset<64> &payload);
+		uint32_t get_id() override;
 		std::bitset<64> to_payload() const override;
 		std::bitset<8> id;                  //Object ID
 		std::bitset<11> arelLong;           //Relative acceleration in longitudinal direction
@@ -78,6 +83,7 @@ namespace message {
 	struct RadarConfig : MessageBase {
 		RadarConfig() = default;
 		explicit RadarConfig(const std::bitset<64> &payload);
+		uint32_t get_id() override;
 		std::bitset<64> to_payload() const override;
 		std::bitset<1> maxDistance_valid;
 		std::bitset<1> sensorID_valid;
@@ -106,6 +112,7 @@ namespace message {
 //0x202 : Object Filter Config
 	struct FilterConfig : MessageBase {
 		explicit FilterConfig(const std::bitset<64> &payload);
+		uint32_t get_id() override;
 		std::bitset<64> to_payload() const override;
 		std::bitset<1> valid;
 		std::bitset<1> active;
@@ -121,6 +128,7 @@ namespace message {
 	struct RadarState : MessageBase {
 		RadarState() = default;
 		explicit RadarState(const std::bitset<64> &payload);
+		uint32_t get_id() override;
 		std::bitset<64> to_payload() const override;
 		std::bitset<1> NvmWriteStatus;
 		std::bitset<1> NvmReadStatus;

@@ -12,6 +12,7 @@ public:
 	                         const std::optional<std::filesystem::path> &dump_file_path = std::nullopt);
 	void setup();
 	void draw(piksel::Graphics &g);
+	void keyReleased(int key) override;
 
 private:
 	std::unique_ptr<Radar> radar;
