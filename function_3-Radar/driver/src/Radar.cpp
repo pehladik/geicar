@@ -31,43 +31,65 @@ void Radar::process() {
 			}
 			message_queue.push_back(std::move(msg));
 		} catch (const std::runtime_error &e) {
-			std::cout << e.what() << '\n';
+			std::cout << e.what() << std::endl;
 		}
 	}
 }
 
-std::unique_ptr<MessageBase> Radar::parse_message(uint32_t id, std::uint8_t data[8]) {
+std::unique_ptr<MessageIn> Radar::parse_message(uint32_t id, std::uint8_t data[8]) {
 	std::bitset<64> payload_reversed = 0;
 	for (int i = 0; i < 8; ++i) {
 		std::uint64_t reversed_payload_byte = reverse_byte(data[i]);
 		payload_reversed |= reversed_payload_byte << (i * 8);
 	}
-	return MessageBase::parse(id, payload_reversed);
+	return MessageIn::parse(id, payload_reversed);
 }
 
 void Radar::generate_measure() {
-	ObjectListStatus *object_list{};
-	while (object_list == nullptr && !message_queue.empty()) {
-		object_list = dynamic_cast<ObjectListStatus *>(message_queue.front().get());
+	std::optional<ObjectListStatus> object_list;
+	std::optional<ClusterListStatus> cluster_list;
+	while (!object_list && !cluster_list && !message_queue.empty()) {
+		if (auto p = dynamic_cast<ObjectListStatus *>(message_queue.front().get())) {
+			object_list = *p;
+		}
+		if (auto p = dynamic_cast<ClusterListStatus *>(message_queue.front().get())) {
+			cluster_list = *p;
+		}
 		message_queue.pop_front();
 	}
 
-	if (object_list) {
-		std::vector<ObjectGeneralInfo> general_info_list{};
-		std::vector<ObjectQualityInfo> quality_info_list{};
-		std::vector<ObjectExtInfo> ext_info_list{};
+	if (cluster_list) {
+		std::array<std::optional<ClusterGeneralInfo>, 256> general_info_list{};
+		std::array<std::optional<ClusterQualityInfo>, 256> quality_info_list{};
 		for (auto &&msg: message_queue) {
-			if (auto general_info = dynamic_cast<ObjectGeneralInfo *>(msg.get())) {
-				general_info_list.emplace_back(*general_info);
+			if (auto general_info = dynamic_cast<ClusterGeneralInfo *>(msg.get())) {
+				const std::uint8_t id = general_info->id.to_ulong();
+				general_info_list[id] = *general_info;
 			}
-			if (auto quality_info = dynamic_cast<ObjectQualityInfo *>(msg.get())) {
-				quality_info_list.emplace_back(*quality_info);
-			}
-			if (auto ext_info = dynamic_cast<ObjectExtInfo *>(msg.get())) {
-				ext_info_list.emplace_back(*ext_info);
+			if (auto quality_info = dynamic_cast<ClusterQualityInfo *>(msg.get())) {
+				const std::uint8_t id = quality_info->id.to_ulong();
+				quality_info_list[id] = *quality_info;
 			}
 		}
-//		std::cout << "generating a new measure...\n";
+		measure = Measure{*cluster_list, general_info_list, quality_info_list};
+	} else if (object_list) {
+		std::array<std::optional<ObjectGeneralInfo>, 256> general_info_list{};
+		std::array<std::optional<ObjectQualityInfo>, 256> quality_info_list{};
+		std::array<std::optional<ObjectExtInfo>, 256> ext_info_list{};
+		for (auto &&msg: message_queue) {
+			if (auto general_info = dynamic_cast<ObjectGeneralInfo *>(msg.get())) {
+				const std::uint8_t id = general_info->id.to_ulong();
+				general_info_list[id] = *general_info;
+			}
+			if (auto quality_info = dynamic_cast<ObjectQualityInfo *>(msg.get())) {
+				const std::uint8_t id = quality_info->id.to_ulong();
+				quality_info_list[id] = *quality_info;
+			}
+			if (auto ext_info = dynamic_cast<ObjectExtInfo *>(msg.get())) {
+				const std::uint8_t id = ext_info->id.to_ulong();
+				ext_info_list[id] = *ext_info;
+			}
+		}
 		measure = Measure{*object_list, general_info_list, quality_info_list, ext_info_list};
 	}
 
@@ -90,7 +112,7 @@ void RealRadar::init_can(const std::string &serial_port) {
 		throw std::runtime_error{"Error starting the CAN bus: " + get_last_error()};
 }
 
-std::unique_ptr<MessageBase> RealRadar::receive() {
+std::unique_ptr<MessageIn> RealRadar::receive() {
 	can_msg_t msg;
 	std::int8_t received;
 	received = simply_receive(&msg);
@@ -149,13 +171,13 @@ RealRadar::~RealRadar() {
 		std::cout << "Error closing the CAN bus: " << get_last_error();
 }
 
-void RealRadar::send(std::unique_ptr<message::MessageBase> msg) {
+void RealRadar::send(std::unique_ptr<message::MessageOut> msg) {
 	std::cout << "Sending message :\n" << *msg;
 	can_msg_t can_msg{};
 	can_msg.ident = msg->get_id();
 	std::uint64_t payload = msg->to_payload().to_ullong();
 	for (int i = 0; i < 8; ++i) {
-		can_msg.payload[i] = (payload >> (i * 8) & 0xff);
+		can_msg.payload[i] = reverse_byte((payload >> (i * 8)) & 0xff);
 	}
 	can_msg.dlc = 8;
 	simply_send(&can_msg);
@@ -196,7 +218,7 @@ SimulatedRadar::SimulatedRadar(const std::filesystem::path &path,
 	}
 }
 
-std::unique_ptr<MessageBase> SimulatedRadar::receive() {
+std::unique_ptr<MessageIn> SimulatedRadar::receive() {
 	using namespace std::chrono;
 	std::uint8_t data[8];
 	std::uint32_t id;
@@ -231,7 +253,7 @@ std::unique_ptr<MessageBase> SimulatedRadar::receive() {
 	}
 }
 
-void SimulatedRadar::send(std::unique_ptr<message::MessageBase> msg) {
+void SimulatedRadar::send(std::unique_ptr<message::MessageOut> msg) {
 	std::cout << "Sending message :\n" << *msg;
 	std::cout << "Simulated radar -> skipping\n";
 }

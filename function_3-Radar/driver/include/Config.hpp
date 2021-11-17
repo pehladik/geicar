@@ -29,9 +29,10 @@ enum struct RcsThreshold {
 	HIGH_SENSITIVITY = 1
 };
 
+constexpr int MAX_DISTANCE_RES = 2;
+
 struct RadarConfiguration {
 	RadarConfiguration() = default;
-	RadarConfiguration(const message::RadarConfig &config_msg);
 	message::RadarConfig to_message() const;
 	std::optional<std::uint8_t> sensorID;
 	std::optional<std::uint16_t> maxDistance;
@@ -43,8 +44,6 @@ struct RadarConfiguration {
 	std::optional<bool> ctrlRelay;
 	std::optional<RcsThreshold> rcsThreshold;
 	std::optional<bool> storeInNVM;
-
-	static constexpr int MAX_DISTANCE_RES = 2;
 };
 
 struct RadarState {

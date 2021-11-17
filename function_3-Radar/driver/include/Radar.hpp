@@ -39,12 +39,12 @@ public:
 	std::optional<::RadarState> state{std::nullopt};
 
 protected:
-	virtual std::unique_ptr<message::MessageBase> receive() = 0;
-	virtual void send(std::unique_ptr<message::MessageBase> msg) = 0;
-	static std::unique_ptr<message::MessageBase> parse_message(std::uint32_t id, std::uint8_t data[8]);
+	virtual std::unique_ptr<message::MessageIn> receive() = 0;
+	virtual void send(std::unique_ptr<message::MessageOut> msg) = 0;
+	static std::unique_ptr<message::MessageIn> parse_message(std::uint32_t id, std::uint8_t data[8]);
 	void generate_measure();
 	void write_to_dump_file(uint32_t ident, const uint8_t data[8]);
-	std::deque<std::unique_ptr<message::MessageBase>> message_queue{};
+	std::deque<std::unique_ptr<message::MessageIn>> message_queue{};
 	std::chrono::high_resolution_clock::time_point time_started{std::chrono::high_resolution_clock::now()};
 	std::optional<std::ofstream> dump_file = std::nullopt;
 };
@@ -68,12 +68,9 @@ public:
 	virtual ~RealRadar();
 
 private:
-protected:
-	void send(std::unique_ptr<message::MessageBase> msg) override;
-private:
-	std::unique_ptr<message::MessageBase> receive() override;
-
 	void init_can(const std::string &serial_port);
+	void send(std::unique_ptr<message::MessageOut> msg) override;
+	std::unique_ptr<message::MessageIn> receive() override;
 };
 
 class SimulatedRadar : public Radar {
@@ -89,10 +86,8 @@ public:
 	virtual ~SimulatedRadar() = default;
 
 private:
-	std::unique_ptr<message::MessageBase> receive() override;
-protected:
-	void send(std::unique_ptr<message::MessageBase> msg) override;
-private:
+	std::unique_ptr<message::MessageIn> receive() override;
+	void send(std::unique_ptr<message::MessageOut> msg) override;
 	std::ifstream file;
 };
 

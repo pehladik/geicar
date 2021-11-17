@@ -15,6 +15,7 @@ public:
 	void keyReleased(int key) override;
 
 private:
+	int m_key;
 	std::unique_ptr<Radar> radar;
 };
 

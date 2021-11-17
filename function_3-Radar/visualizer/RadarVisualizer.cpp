@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 #include "RadarVisualizer.hpp"
 
 RadarVisualizer::RadarVisualizer(const std::filesystem::path &path,
@@ -26,7 +27,7 @@ struct Coord {
 };
 
 constexpr Coord radar_to_screen_coord(double lon, double lat) {
-	return {static_cast<float>((lat - Object::DIST_LAT_MIN - 195.) * 7.),
+	return {static_cast<float>((lat - Object::DIST_LAT_MIN_OBJECTS - 195.) * 7.),
 	        static_cast<float>((lon - Object::DIST_LONG_MIN - 430.) * 7.)};
 }
 
@@ -69,7 +70,19 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 	g.text("bicycle", 50, 250);
 	g.fill(black);
 	g.text("other", 50, 300);
+	if (radar->state.has_value()) {
+		g.textSize(11);
+		std::stringstream ss;
+		ss << radar->state.value();
+		g.text(ss.str(), 0, 2 * height / 3);
+	}
+	g.textSize(18);
+	std::stringstream ss_key;
+	ss_key << (char) m_key;
+	g.text(ss_key.str(), width - 40, 20);
+	g.text(std::to_string(m_key), width - 40, 45);
 	g.pop();
+
 
 	// radar
 	const Coord radar_coord = radar_to_screen_coord(0, 0);
@@ -114,21 +127,25 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 
 		for (int i = 0; i < nObjects; i++) {
 			const Object &object = measure.objects[i];
-//			if (object.quality_info->probability_of_existence < 0.999) {
-//				continue;
-//			}
+
 			const Coord screen_coord = radar_to_screen_coord(object.distance_lat, object.distance_long);
-			const double x = screen_coord.x;
-			const double y = screen_coord.y;
-			const auto dist = std::to_string(int(sqrt(pow(object.distance_lat, 2) + pow(object.distance_long, 2)))) + "m";
-			const glm::tvec4<float> transparency{0, 0, 0, 1 - object.quality_info->probability_of_existence};
+			const float x = screen_coord.x;
+			const float y = screen_coord.y;
+			const auto dist = sqrt(pow(object.distance_lat, 2) + pow(object.distance_long, 2));
+			std::stringstream ss_dist;
+			ss_dist << std::fixed << std::setprecision(1) << dist << "m";
+
+			glm::tvec4<float> transparency{0, 0, 0, 0};
+			if (object.quality_info.has_value()) {
+				transparency = {0, 0, 0, 1 - object.quality_info->probability_of_existence};
+			}
 
 			g.push();
 			g.textSize(15);
 			g.strokeWeight(1);
 			g.noStroke();
 			g.fill(gray - transparency);
-			g.text(dist, x, y);
+			g.text(ss_dist.str(), x, y);
 			g.pop();
 
 
@@ -159,13 +176,43 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 				g.ellipse(x, y, 10 * sqrt(object.radar_cross_section), 10 * sqrt(object.radar_cross_section));
 				g.pop();
 			}
-//			std::cout << x << ", " << y << '\n';
 		}
 	}
 }
 
 void RadarVisualizer::keyReleased(int key) {
+	m_key = key;
 	RadarConfiguration config{};
-	config.maxDistance = 100.0;
+	std::cout << "key = '" << (char) key << "' => " << key << std::endl;
+	if (key == 'O') {
+		if (radar->state.has_value()) {
+			config.outputType = radar->state->outputTypeCfg == OutputType::CLUSTERS ?
+			                    OutputType::OBJECTS : OutputType::CLUSTERS;
+		} else {
+			config.outputType = OutputType::OBJECTS;
+		}
+	}
+	if (key == 'P') {
+		if (radar->state.has_value()) {
+			config.radarPower = static_cast<RadarPower>(static_cast<int>(radar->state->radarPowerCfg) + 1 % 4);
+		} else {
+			config.radarPower = RadarPower::STANDARD;
+		}
+	}
+	if (key == 'T') {
+		if (radar->state.has_value()) {
+			config.rcsThreshold = radar->state->rcsThreshold == RcsThreshold::STANDARD ?
+			                      RcsThreshold::HIGH_SENSITIVITY : RcsThreshold::STANDARD;
+		} else {
+			config.rcsThreshold = RcsThreshold::STANDARD;
+		}
+	}
+	if (key == 'D') {
+		if (radar->state.has_value()) {
+			config.maxDistance = 296 + ((radar->state->maxDistanceCfg - 296) % 54) + 10;
+		} else {
+			config.maxDistance = 296;
+		}
+	}
 	radar->send_config(config);
 }

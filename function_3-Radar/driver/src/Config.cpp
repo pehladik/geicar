@@ -69,44 +69,12 @@ std::ostream &operator<<(std::ostream &os, ::RadarState::MotionRxState value) {
 	return os;
 }
 
-RadarConfiguration::RadarConfiguration(const message::RadarConfig &config_msg) :
-		sensorID{config_msg.sensorID_valid.to_ullong() ?
-		         std::optional<std::uint8_t>{config_msg.sensorID.to_ullong()} :
-		         std::nullopt},
-		maxDistance{config_msg.maxDistance_valid.to_ullong() ?
-		            std::optional<std::uint16_t>{config_msg.maxDistance.to_ullong() * MAX_DISTANCE_RES} :
-		            std::nullopt},
-		radarPower{config_msg.radarPower_valid.to_ullong() ?
-		           std::optional<RadarPower>{static_cast<RadarPower>(config_msg.radarPower.to_ullong())} :
-		           std::nullopt},
-		outputType{config_msg.outputType_valid.to_ullong() ?
-		           std::optional<OutputType>{static_cast<OutputType>(config_msg.outputType.to_ullong())} :
-		           std::nullopt},
-		sendQuality{config_msg.sendQuality_valid.to_ullong() ?
-		            std::optional<bool>{config_msg.sendQuality.to_ullong()} :
-		            std::nullopt},
-		sendExtInfo{config_msg.sendExtInfo_valid.to_ullong() ?
-		            std::optional<bool>{config_msg.sendExtInfo.to_ullong()} :
-		            std::nullopt},
-		sortIndex{config_msg.sortIndex_valid.to_ullong() ?
-		          std::optional<SortIndex>{static_cast<SortIndex>(config_msg.sortIndex.to_ullong())} :
-		          std::nullopt},
-		ctrlRelay{config_msg.ctrlRelay_valid.to_ullong() ?
-		          std::optional<bool>{config_msg.ctrlRelay.to_ullong()} :
-		          std::nullopt},
-		rcsThreshold{config_msg.rcsThreshold_valid.to_ullong() ?
-		             std::optional<RcsThreshold>{static_cast<RcsThreshold>(config_msg.rcsThreshold.to_ullong())} :
-		             std::nullopt},
-		storeInNVM{config_msg.storeInNVM_valid.to_ullong() ?
-		           std::optional<bool>{config_msg.storeInNVM.to_ullong()} : std
-		           ::nullopt} {}
-
 RadarConfig RadarConfiguration::to_message() const {
 	RadarConfig msg{};
 	msg.sensorID_valid = sensorID.has_value();
 	msg.sensorID = std::bitset<3>{sensorID.value_or(0)};
 	msg.maxDistance_valid = maxDistance.has_value();
-	msg.maxDistance = std::bitset<10>{maxDistance.value_or(0)};
+	msg.maxDistance = std::bitset<10>{static_cast<unsigned long long>(maxDistance.value_or(0) / MAX_DISTANCE_RES)};
 	msg.radarPower_valid = radarPower.has_value();
 	msg.radarPower = std::bitset<3>{static_cast<unsigned>(radarPower.value_or(RadarPower::STANDARD))};
 	msg.outputType_valid = outputType.has_value();
@@ -129,7 +97,7 @@ RadarConfig RadarConfiguration::to_message() const {
 ::RadarState::RadarState(const message::RadarState &status_msg) :
 		NvmWriteStatus{static_cast<Status>(status_msg.NvmWriteStatus.to_ullong())},
 		NvmReadStatus{static_cast<Status>(status_msg.NvmReadStatus.to_ullong())},
-		maxDistanceCfg{static_cast<std::uint16_t>(status_msg.maxDistanceCfg.to_ullong())},
+		maxDistanceCfg{static_cast<std::uint16_t>(status_msg.maxDistanceCfg.to_ullong() * MAX_DISTANCE_RES)},
 		persistentError{static_cast<bool>(status_msg.persistentError.to_ullong())},
 		interference{static_cast<bool>(status_msg.interference.to_ullong())},
 		temperatureError{static_cast<bool>(status_msg.temperatureError.to_ullong())},

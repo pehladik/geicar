@@ -8,8 +8,9 @@
 
 
 struct QualityInformation {
-	static constexpr std::array<double, 8> PROB_OF_EXISTENCE = {0.00, 0.25, 0.5, 0.75, 0.90, 0.99, 0.999, 1.0};
 	QualityInformation(const message::ObjectQualityInfo &quality_info_msg);
+	QualityInformation(const message::ClusterQualityInfo &quality_info_msg);
+	static constexpr std::array<double, 8> PROB_OF_EXISTENCE = {0.00, 0.25, 0.5, 0.75, 0.90, 0.99, 0.999, 1.0};
 	double probability_of_existence;
 };
 
@@ -43,10 +44,11 @@ struct CollisionDetectionWarning {
 };
 
 struct Object {
-	Object(const message::ObjectGeneralInfo &general_info_msg);
-	Object(const message::ObjectGeneralInfo &general_info_msg, const message::ObjectExtInfo &extended_info_msg);
-	Object(const message::ObjectGeneralInfo &general_info_msg, const message::ObjectExtInfo &extended_info_msg,
-	       const message::ObjectQualityInfo &quality_info_msg);
+	Object(const message::ObjectGeneralInfo &general_info_msg,
+	       const std::optional<message::ObjectQualityInfo> &quality_info_msg,
+	       const std::optional<message::ObjectExtInfo> &extended_info_msg);
+	Object(const message::ClusterGeneralInfo &general_info_msg,
+	       const std::optional<message::ClusterQualityInfo> &quality_info_msg);
 	enum struct DynamicProperty {
 		MOVING = 0x0,
 		STATIONARY = 0x1,
@@ -72,7 +74,8 @@ struct Object {
 	static constexpr double DIST_RES = 0.2;
 	static constexpr double DIST_LONG_MIN = -500;
 	static constexpr double DIST_LONG_MAX = 1138.2;
-	static constexpr double DIST_LAT_MIN = -204.6;
+	static constexpr double DIST_LAT_MIN_OBJECTS = -204.6;
+	static constexpr double DIST_LAT_MIN_CLUSTERS = -102.3;
 	static constexpr double DIST_LAT_MAX = 204.8;
 	static constexpr double VREL_RES = 0.25;
 	static constexpr double VREL_LONG_MIN = -128.0;
@@ -83,9 +86,12 @@ struct Object {
 
 struct Measure {
 	Measure(const message::ObjectListStatus &list_status_msg,
-	        const std::vector<message::ObjectGeneralInfo> &general_info_msg,
-	        const std::vector<message::ObjectQualityInfo> &quality_info_msg,
-	        const std::vector<message::ObjectExtInfo> &extended_info_msg);
+	        const std::array<std::optional<message::ObjectGeneralInfo>, 256> &general_info_msg,
+	        const std::array<std::optional<message::ObjectQualityInfo>, 256> &quality_info_msg,
+	        const std::array<std::optional<message::ObjectExtInfo>, 256> &extended_info_msg);
+	Measure(const message::ClusterListStatus &list_status_msg,
+	        const std::array<std::optional<message::ClusterGeneralInfo>, 256> &general_info_msg,
+	        const std::array<std::optional<message::ClusterQualityInfo>, 256> &quality_info_msg);
 	unsigned counter;
 	std::vector<Object> objects;
 	friend std::ostream &operator<<(std::ostream &os, const Measure &measure);

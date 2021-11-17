@@ -6,7 +6,7 @@
 
 namespace message {
 
-	std::unique_ptr<MessageBase> MessageBase::parse(std::uint32_t id, const std::bitset<64> &payload) {
+	std::unique_ptr<MessageIn> MessageIn::parse(std::uint32_t id, const std::bitset<64> &payload) {
 		switch (id) {
 			case 0x60A:
 				return std::make_unique<ObjectListStatus>(payload);
@@ -16,12 +16,18 @@ namespace message {
 				return std::make_unique<ObjectQualityInfo>(payload);
 			case 0x60D:
 				return std::make_unique<ObjectExtInfo>(payload);
-			case 0x200:
-				return std::make_unique<RadarConfig>(payload);
+			case 0x600:
+				return std::make_unique<ClusterListStatus>(payload);
+			case 0x701:
+				return std::make_unique<ClusterGeneralInfo>(payload);
+			case 0x702:
+				return std::make_unique<ClusterQualityInfo>(payload);
 			case 0x201:
 				return std::make_unique<RadarState>(payload);
-			case 0x202:
-				return std::make_unique<FilterConfig>(payload);
+			case 0x203:
+				return std::make_unique<FilterStateHeader>(payload);
+			case 0x204:
+				return std::make_unique<FilterStateConfig>(payload);
 		}
 		std::ostringstream ss{};
 		ss << "Unknown message id: 0x" << std::hex << id;
@@ -36,27 +42,17 @@ namespace message {
 	ObjectListStatus::ObjectListStatus(const std::bitset<64> &payload) :
 			nofObjects{reverse_slice<0, 8>(payload)},
 			measCounter{reverse_slice<8, 16>(payload)},
-			interfaceVersion{reverse_slice<24, 4>(payload)} {
+			interfaceVersion{reverse_slice<24, 4>(payload)} {}
+
+	uint32_t ObjectListStatus::get_id() {
+		return 0x60A;
 	}
 
 	void ObjectListStatus::print(std::ostream &os) const {
 		os << "Object_list_status:\n";
-		print_bitset64(os, to_payload());
 		os << "  nofObjects: " << nofObjects.to_ulong() << '\n' <<
 		   "  measCounter: " << measCounter.to_ulong() << '\n' <<
 		   "  interfaceVersion: " << interfaceVersion.to_ulong() << '\n';
-	}
-
-
-	std::bitset<64> ObjectListStatus::to_payload() const {
-		return concat_bitsets(reverse(nofObjects),
-		                      reverse(measCounter),
-		                      reverse(interfaceVersion),
-		                      std::bitset<36>{});
-	}
-
-	uint32_t ObjectListStatus::get_id() {
-		return 0x60A;
 	}
 
 
@@ -70,9 +66,12 @@ namespace message {
 			rcs{reverse_slice<56, 8>(payload)} {}
 
 
+	uint32_t ObjectGeneralInfo::get_id() {
+		return 0x60B;
+	}
+
 	void ObjectGeneralInfo::print(std::ostream &os) const {
 		os << "Object_general_info:\n";
-		print_bitset64(os, to_payload());
 		os << "  id: " << id.to_ulong() << '\n' <<
 		   "  distLong: " << distLong.to_ulong() << '\n' <<
 		   "  distLat: " << distLat.to_ulong() << '\n' <<
@@ -80,21 +79,6 @@ namespace message {
 		   "  vrelLat: " << vrelLat.to_ulong() << '\n' <<
 		   "  dynProp: " << dynProp.to_ulong() << '\n' <<
 		   "  rcs: " << rcs.to_ulong() << '\n';
-	}
-
-	std::bitset<64> ObjectGeneralInfo::to_payload() const {
-		return concat_bitsets(reverse(id),
-		                      reverse(distLong),
-		                      reverse(distLat),
-		                      reverse(vrelLong),
-		                      reverse(vrelLat),
-		                      std::bitset<2>{},
-		                      reverse(dynProp),
-		                      reverse(rcs));
-	}
-
-	uint32_t ObjectGeneralInfo::get_id() {
-		return 0x60B;
 	}
 
 	ObjectQualityInfo::ObjectQualityInfo(const std::bitset<64> &payload) :
@@ -109,9 +93,12 @@ namespace message {
 			probOfExist{reverse_slice<48, 3>(payload)},
 			measState{reverse_slice<51, 3>(payload)} {}
 
+	uint32_t ObjectQualityInfo::get_id() {
+		return 0x60C;
+	}
+
 	void ObjectQualityInfo::print(std::ostream &os) const {
 		os << "Object_quality_info:\n";
-		print_bitset64(os, to_payload());
 		os << "  id: " << id.to_ulong() << '\n' <<
 		   "  distLong_rms: " << distLong_rms.to_ulong() << '\n' <<
 		   "  distLat_rms: " << distLat_rms.to_ulong() << '\n' <<
@@ -123,27 +110,7 @@ namespace message {
 		   "  probOfExist: " << probOfExist.to_ulong() << '\n';
 	}
 
-	std::bitset<64> ObjectQualityInfo::to_payload() const {
-		return concat_bitsets(reverse(id),
-		                      reverse(distLong_rms),
-		                      reverse(distLat_rms),
-		                      reverse(vrelLong_rms),
-		                      reverse(vrelLat_rms),
-		                      reverse(arelLong_rms),
-		                      reverse(arelLat_rms),
-		                      reverse(orientation_rms),
-		                      std::bitset<5>{},
-		                      reverse(probOfExist),
-		                      reverse(measState),
-		                      std::bitset<10>{});
-	}
-
-	uint32_t ObjectQualityInfo::get_id() {
-		return 0x60C;
-	}
-
-	ObjectExtInfo::ObjectExtInfo(
-			const std::bitset<64> &payload) :
+	ObjectExtInfo::ObjectExtInfo(const std::bitset<64> &payload) :
 			id{reverse_slice<0, 8>(payload)},
 			arelLong{reverse_slice<8, 11>(payload)},
 			arelLat{reverse_slice<19, 9>(payload)},
@@ -152,9 +119,12 @@ namespace message {
 			length{reverse_slice<48, 8>(payload)},
 			width{reverse_slice<56, 8>(payload)} {}
 
+	uint32_t ObjectExtInfo::get_id() {
+		return 0x60D;
+	}
+
 	void ObjectExtInfo::print(std::ostream &os) const {
 		os << "Object_ext_info:\n";
-		print_bitset64(os, to_payload());
 		os << "  id: " << id.to_ulong() << '\n' <<
 		   "  arelLong: " << arelLong.to_ulong() << '\n' <<
 		   "  arelLat: " << arelLat.to_ulong() << '\n' <<
@@ -164,69 +134,80 @@ namespace message {
 		   "  width: " << width.to_ulong() << '\n';
 	}
 
-	std::bitset<64> ObjectExtInfo::to_payload() const {
-		return concat_bitsets(reverse(id),
-		                      reverse(arelLong),
-		                      reverse(arelLat),
-		                      std::bitset<1>{},
-		                      reverse(objectClass),
-		                      reverse(orientationAngle),
-		                      std::bitset<6>{},
-		                      reverse(length),
-		                      reverse(width));
+	ClusterListStatus::ClusterListStatus(const std::bitset<64> &payload) :
+			nofTargetsNear{reverse_slice<0, 8>(payload)},
+			nofTargetsFar{reverse_slice<0, 8>(payload)},
+			measCounter{reverse_slice<16, 16>(payload)},
+			interfaceVersion{reverse_slice<32, 4>(payload)} {}
+
+	uint32_t ClusterListStatus::get_id() {
+		return 0x600;
 	}
 
-	uint32_t ObjectExtInfo::get_id() {
-		return 0x60D;
+	void ClusterListStatus::print(std::ostream &os) const {
+		os << "ClusterListStatus:\n";
+		os << "  nofTargetsNear: " << nofTargetsNear.to_ulong() << '\n' <<
+		   "  nofTargetsFar: " << nofTargetsFar.to_ulong() << '\n' <<
+		   "  measCounter: " << measCounter.to_ulong() << '\n' <<
+		   "  interfaceVersion: " << interfaceVersion.to_ulong() << '\n';
 	}
 
-	void RadarConfig::print(std::ostream &os) const {
-		os << "Radar_config:\n";
-		print_bitset64(os, to_payload());
-		os << "  maxDistance_valid: " << maxDistance_valid.to_ulong() << '\n' <<
-		   "  sensorID_valid: " << sensorID_valid.to_ulong() << '\n' <<
-		   "  radarPower_valid: " << radarPower_valid.to_ulong() << '\n' <<
-		   "  outputType_valid: " << outputType_valid.to_ulong() << '\n' <<
-		   "  sendQuality_valid: " << sendQuality_valid.to_ulong() << '\n' <<
-		   "  sendExtInfo_valid: " << sendExtInfo_valid.to_ulong() << '\n' <<
-		   "  sortIndex_valid: " << sortIndex_valid.to_ulong() << '\n' <<
-		   "  storeInNVM_valid: " << storeInNVM_valid.to_ulong() << '\n' <<
-		   "  maxDistance: " << maxDistance.to_ulong() << '\n' <<
-		   "  sensorID: " << sensorID.to_ulong() << '\n' <<
-		   "  outputType: " << outputType.to_ulong() << '\n' <<
-		   "  radarPower: " << radarPower.to_ulong() << '\n' <<
-		   "  ctrlRelay_valid: " << ctrlRelay_valid.to_ulong() << '\n' <<
-		   "  ctrlRelay: " << ctrlRelay.to_ulong() << '\n' <<
-		   "  sendQuality: " << sendQuality.to_ulong() << '\n' <<
-		   "  sendExtInfo: " << sendExtInfo.to_ulong() << '\n' <<
-		   "  sortIndex: " << sortIndex.to_ulong() << '\n' <<
-		   "  storeInNVM: " << storeInNVM.to_ulong() << '\n' <<
-		   "  rcsThreshold_valid: " << rcsThreshold_valid.to_ulong() << '\n' <<
-		   "  rcsThreshold: " << rcsThreshold.to_ulong() << '\n';
+	ClusterGeneralInfo::ClusterGeneralInfo(const std::bitset<64> &payload) :
+			id{reverse_slice<0, 8>(payload)},
+			distLong{reverse_slice<8, 13>(payload)},
+			distLat{reverse_slice<22, 10>(payload)},
+			vrelLong{reverse_slice<32, 10>(payload)},
+			vrelLat{reverse_slice<42, 9>(payload)},
+			dynProp{reverse_slice<53, 3>(payload)},
+			rcs{reverse_slice<56, 8>(payload)} {}
+
+
+	uint32_t ClusterGeneralInfo::get_id() {
+		return 0x701;
 	}
 
-	RadarConfig::RadarConfig(
-			const std::bitset<64> &payload) :
-			storeInNVM_valid{reverse_slice<0, 1>(payload)},
-			sortIndex_valid{reverse_slice<1, 1>(payload)},
-			sendExtInfo_valid{reverse_slice<2, 1>(payload)},
-			sendQuality_valid{reverse_slice<3, 1>(payload)},
-			outputType_valid{reverse_slice<4, 1>(payload)},
-			radarPower_valid{reverse_slice<5, 1>(payload)},
-			sensorID_valid{reverse_slice<6, 1>(payload)},
-			maxDistance_valid{reverse_slice<7, 1>(payload)},
-			maxDistance{reverse_slice<8, 10>(payload)},
-			radarPower{reverse_slice<32, 3>(payload)},
-			outputType{reverse_slice<35, 2>(payload)},
-			sensorID{reverse_slice<37, 3>(payload)},
-			storeInNVM{reverse_slice<40, 1>(payload)},
-			sortIndex{reverse_slice<41, 3>(payload)},
-			sendExtInfo{reverse_slice<44, 1>(payload)},
-			sendQuality{reverse_slice<45, 1>(payload)},
-			ctrlRelay{reverse_slice<46, 1>(payload)},
-			ctrlRelay_valid{reverse_slice<47, 1>(payload)},
-			rcsThreshold{reverse_slice<52, 3>(payload)},
-			rcsThreshold_valid{reverse_slice<55, 1>(payload)} {}
+	void ClusterGeneralInfo::print(std::ostream &os) const {
+		os << "ClusterGeneralInfo:\n";
+		os << "  id: " << id.to_ulong() << '\n' <<
+		   "  distLong: " << distLong.to_ulong() << '\n' <<
+		   "  distLat: " << distLat.to_ulong() << '\n' <<
+		   "  vrelLong: " << vrelLong.to_ulong() << '\n' <<
+		   "  vrelLat: " << vrelLat.to_ulong() << '\n' <<
+		   "  dynProp: " << dynProp.to_ulong() << '\n' <<
+		   "  rcs: " << rcs.to_ulong() << '\n';
+	}
+
+
+	ClusterQualityInfo::ClusterQualityInfo(const std::bitset<64> &payload) :
+			id{reverse_slice<0, 8>(payload)},
+			distLong_rms{reverse_slice<8, 5>(payload)},
+			distLat_rms{reverse_slice<13, 5>(payload)},
+			vrelLong_rms{reverse_slice<18, 5>(payload)},
+			vrelLat_rms{reverse_slice<23, 5>(payload)},
+			pdh0{reverse_slice<29, 3>(payload)},
+			invalidState{reverse_slice<32, 5>(payload)},
+			ambigState{reverse_slice<37, 3>(payload)} {}
+
+	uint32_t ClusterQualityInfo::get_id() {
+		return 0x702;
+	}
+
+	void ClusterQualityInfo::print(std::ostream &os) const {
+		os << "ClusterQualityInfo:\n";
+		os << "  id: " << id.to_ulong() << '\n' <<
+		   "  distLong_rms: " << distLong_rms.to_ulong() << '\n' <<
+		   "  distLat_rms: " << distLat_rms.to_ulong() << '\n' <<
+		   "  vrelLong_rms: " << vrelLong_rms.to_ulong() << '\n' <<
+		   "  vrelLat_rms: " << vrelLat_rms.to_ulong() << '\n' <<
+		   "  pdh0: " << pdh0.to_ulong() << '\n' <<
+		   "  invalidState: " << invalidState.to_ulong() << '\n' <<
+		   "  ambigState: " << ambigState.to_ulong() << '\n';
+
+	}
+
+	uint32_t RadarConfig::get_id() {
+		return 0x200;
+	}
 
 	std::bitset<64> RadarConfig::to_payload() const {
 		return concat_bitsets(storeInNVM_valid,
@@ -254,28 +235,45 @@ namespace message {
 		                      std::bitset<8>{});
 	}
 
-	uint32_t RadarConfig::get_id() {
-		return 0x200;
+	void RadarConfig::print(std::ostream &os) const {
+		os << "Radar_config:\n";
+		print_bitset64(os, to_payload());
+		os << "  maxDistance_valid: " << maxDistance_valid.to_ulong() << '\n' <<
+		   "  sensorID_valid: " << sensorID_valid.to_ulong() << '\n' <<
+		   "  radarPower_valid: " << radarPower_valid.to_ulong() << '\n' <<
+		   "  outputType_valid: " << outputType_valid.to_ulong() << '\n' <<
+		   "  sendQuality_valid: " << sendQuality_valid.to_ulong() << '\n' <<
+		   "  sendExtInfo_valid: " << sendExtInfo_valid.to_ulong() << '\n' <<
+		   "  sortIndex_valid: " << sortIndex_valid.to_ulong() << '\n' <<
+		   "  storeInNVM_valid: " << storeInNVM_valid.to_ulong() << '\n' <<
+		   "  maxDistance: " << maxDistance.to_ulong() << '\n' <<
+		   "  sensorID: " << sensorID.to_ulong() << '\n' <<
+		   "  outputType: " << outputType.to_ulong() << '\n' <<
+		   "  radarPower: " << radarPower.to_ulong() << '\n' <<
+		   "  ctrlRelay_valid: " << ctrlRelay_valid.to_ulong() << '\n' <<
+		   "  ctrlRelay: " << ctrlRelay.to_ulong() << '\n' <<
+		   "  sendQuality: " << sendQuality.to_ulong() << '\n' <<
+		   "  sendExtInfo: " << sendExtInfo.to_ulong() << '\n' <<
+		   "  sortIndex: " << sortIndex.to_ulong() << '\n' <<
+		   "  storeInNVM: " << storeInNVM.to_ulong() << '\n' <<
+		   "  rcsThreshold_valid: " << rcsThreshold_valid.to_ulong() << '\n' <<
+		   "  rcsThreshold: " << rcsThreshold.to_ulong() << '\n';
 	}
 
-	FilterConfig::FilterConfig(const std::bitset<64> &payload) :
-			type{reverse_slice<0, 1>(payload)},
-			index{reverse_slice<1, 4>(payload)},
-			active{reverse_slice<5, 1>(payload)},
-			valid{reverse_slice<6, 1>(payload)},
-			minDistance{reverse_slice<12, 12>(payload)},
-			maxDistance{reverse_slice<28, 12>(payload)} {}
-
 	std::bitset<64> FilterConfig::to_payload() const {
-		return concat_bitsets(type,
-		                      index,
-		                      active,
-		                      valid,
+		return concat_bitsets(reverse(type),
+		                      reverse(index),
+		                      reverse(active),
+		                      reverse(valid),
 		                      std::bitset<5>{},
 		                      reverse(minDistance),
 		                      std::bitset<4>{},
 		                      reverse(maxDistance),
 		                      std::bitset<24>{});
+	}
+
+	uint32_t FilterConfig::get_id() {
+		return 0x202;
 	}
 
 	void FilterConfig::print(std::ostream &os) const {
@@ -287,37 +285,6 @@ namespace message {
 		   "  valid: " << valid.to_ulong() << '\n' <<
 		   "  min_distance: " << minDistance.to_ulong() << '\n' <<
 		   "  max_distance: " << maxDistance.to_ulong() << '\n';
-	}
-
-	uint32_t FilterConfig::get_id() {
-		return 0x202;
-	}
-
-	std::bitset<64> RadarState::to_payload() const {
-		return concat_bitsets(
-				NvmWriteStatus,
-				NvmReadStatus,
-				std::bitset<6>{},
-				maxDistanceCfg,
-				persistentError,
-				interference,
-				temperatureError,
-				temporaryError,
-				voltageError,
-				std::bitset<7>{},
-				radarPowerCfg,
-				sortIndex,
-				std::bitset<1>{},
-				sensorId,
-				motionRxState,
-				sendExtInfoCfg,
-				sendQualityCfg,
-				outputTypeCfg,
-				controlRelayCfg,
-				std::bitset<12>{},
-				rcsThreshold,
-				std::bitset<2>{}
-		);
 	}
 
 	RadarState::RadarState(const std::bitset<64> &payload) :
@@ -339,9 +306,12 @@ namespace message {
 			controlRelayCfg{reverse_slice<46, 1>(payload)},
 			rcsThreshold{reverse_slice<59, 3>(payload)} {}
 
+	uint32_t RadarState::get_id() {
+		return 0x201;
+	}
+
 	void RadarState::print(std::ostream &os) const {
 		os << "Radar_State:\n";
-		print_bitset64(os, to_payload());
 		os << "  NvmWriteStatus: " << NvmWriteStatus.to_ulong() << '\n' <<
 		   "  NvmReadStatus: " << NvmReadStatus.to_ulong() << '\n' <<
 		   "  maxDistanceCfg: " << maxDistanceCfg.to_ulong() << '\n' <<
@@ -361,8 +331,80 @@ namespace message {
 
 	}
 
-	uint32_t RadarState::get_id() {
-		return 0x201;
+	uint32_t SpeedInformation::get_id() {
+		return 0x300;
 	}
 
+	std::bitset<64> SpeedInformation::to_payload() const {
+		return concat_bitsets(reverse(speedDirection),
+		                      std::bitset<1>{},
+		                      reverse(speed),
+		                      std::bitset<48>{});
+	}
+
+	void SpeedInformation::print(std::ostream &os) const {
+		os << "SpeedInformation:\n";
+		print_bitset64(os, to_payload());
+		os << "  speedDirection: " << speedDirection.to_ulong() << '\n' <<
+		   "  speed: " << speed.to_ulong() << '\n';
+	}
+
+	uint32_t YawRateInformation::get_id() {
+		return 0x301;
+	}
+
+	std::bitset<64> YawRateInformation::to_payload() const {
+		return concat_bitsets(reverse(yawRate), std::bitset<48>{});
+	}
+
+	void YawRateInformation::print(std::ostream &os) const {
+		os << "YawRateInformation:\n";
+		print_bitset64(os, to_payload());
+		os << "  yawRate: " << yawRate.to_ulong() << '\n';
+	}
+
+	FilterStateHeader::FilterStateHeader(const std::bitset<64> &payload) :
+			nOfClusterFilterCfg{reverse_slice<0, 5>(payload)},
+			nOfObjectFilterCfg{reverse_slice<8, 5>(payload)} {}
+
+	uint32_t FilterStateHeader::get_id() {
+		return 0x203;
+	}
+
+	void FilterStateHeader::print(std::ostream &os) const {
+		os << "YawRateInformation:\n";
+		os << "  nOfClusterFilterCfg: " << nOfClusterFilterCfg.to_ulong() << '\n' <<
+		   "  nOfObjectFilterCfg: " << nOfObjectFilterCfg.to_ulong() << '\n';
+	}
+
+	FilterStateConfig::FilterStateConfig(const std::bitset<64> &payload) :
+			type{reverse_slice<0, 1>(payload)},
+			index{reverse_slice<1, 4>(payload)},
+			active{reverse_slice<5, 1>(payload)} {
+		if (type.to_ulong() == 0xA) {
+			min = reverse_slice<11, 13>(payload);
+			max = reverse_slice<27, 13>(payload);
+		} else {
+			min = reverse_slice<12, 12>(payload);
+			max = reverse_slice<28, 12>(payload);
+		}
+	}
+
+	uint32_t FilterStateConfig::get_id() {
+		return 0x204;
+	}
+
+	void FilterStateConfig::print(std::ostream &os) const {
+		os << "FilterStateConfig:\n";
+		os << "  type: " << type.to_ulong() << '\n' <<
+		   "  index: " << index.to_ulong() << '\n' <<
+		   "  active: " << active.to_ulong() << '\n';
+		if (type.to_ullong() == 0xA) {
+			os << "  min: " << std::get<1>(min).to_ulong() << '\n' <<
+			   "  max: " << std::get<1>(max).to_ulong() << '\n';
+		} else {
+			os << "  min: " << std::get<0>(min).to_ulong() << '\n' <<
+			   "  max: " << std::get<0>(max).to_ulong() << '\n';
+		}
+	}
 }

@@ -4,23 +4,29 @@
 #include <bitset>
 #include <memory>
 #include <ostream>
+#include <variant>
 
 namespace message {
 
 	struct MessageBase {
-		static std::unique_ptr<MessageBase> parse(std::uint32_t id, const std::bitset<64> &payload);
 		virtual std::uint32_t get_id() = 0;
-		virtual std::bitset<64> to_payload() const = 0;
 		virtual void print(std::ostream &os) const = 0;
 		friend std::ostream &operator<<(std::ostream &os, const MessageBase &msg);
 		virtual ~MessageBase() = default;
 	};
 
+	struct MessageIn : public MessageBase {
+		static std::unique_ptr<MessageIn> parse(std::uint32_t id, const std::bitset<64> &payload);
+	};
+
+	struct MessageOut : public MessageBase {
+		virtual std::bitset<64> to_payload() const = 0;
+	};
+
 //0x60A : Object list status
-	struct ObjectListStatus : MessageBase {
+	struct ObjectListStatus : public MessageIn {
 		explicit ObjectListStatus(const std::bitset<64> &payload);
 		uint32_t get_id() override;
-		std::bitset<64> to_payload() const override;
 		std::bitset<8> nofObjects;          //number of objects
 		std::bitset<16> measCounter;        //measurement cycle counter
 		std::bitset<4> interfaceVersion;    //object list CAN interface version
@@ -29,10 +35,9 @@ namespace message {
 	};
 
 //0x60B : Object General information
-	struct ObjectGeneralInfo : MessageBase {
+	struct ObjectGeneralInfo : public MessageIn {
 		explicit ObjectGeneralInfo(const std::bitset<64> &payload);
 		uint32_t get_id() override;
-		std::bitset<64> to_payload() const override;
 		std::bitset<8> id;                  //Object ID
 		std::bitset<13> distLong;           //Longitudinal coordinate (x)
 		std::bitset<11> distLat;            //Lateral coordinate (y)
@@ -45,10 +50,9 @@ namespace message {
 	};
 
 //0x60C : Object quality information
-	struct ObjectQualityInfo : MessageBase {
+	struct ObjectQualityInfo : public MessageIn {
 		explicit ObjectQualityInfo(const std::bitset<64> &payload);
 		uint32_t get_id() override;
-		std::bitset<64> to_payload() const override;
 		std::bitset<8> id;                  //Object ID
 		std::bitset<5> distLong_rms;        //Standard deviation of longitudinal distance
 		std::bitset<5> distLat_rms;         //Standard deviation of lateral distance
@@ -64,10 +68,9 @@ namespace message {
 	};
 
 //0x60D : Object Extended Information
-	struct ObjectExtInfo : MessageBase {
+	struct ObjectExtInfo : public MessageIn {
 		explicit ObjectExtInfo(const std::bitset<64> &payload);
 		uint32_t get_id() override;
-		std::bitset<64> to_payload() const override;
 		std::bitset<8> id;                  //Object ID
 		std::bitset<11> arelLong;           //Relative acceleration in longitudinal direction
 		std::bitset<9> arelLat;             //Relative acceleration in lateral direction
@@ -79,10 +82,118 @@ namespace message {
 		virtual ~ObjectExtInfo() = default;
 	};
 
-//0x200 : Radar Configuration
-	struct RadarConfig : MessageBase {
+
+//0x600 : Cluster list status
+	struct ClusterListStatus : public MessageIn {
+		explicit ClusterListStatus(const std::bitset<64> &payload);
+		uint32_t get_id() override;
+		std::bitset<8> nofTargetsNear;
+		std::bitset<8> nofTargetsFar;
+		std::bitset<16> measCounter;
+		std::bitset<4> interfaceVersion;
+		void print(std::ostream &os) const override;
+		virtual ~ClusterListStatus() = default;
+	};
+
+//0x701 : Cluster General information
+	struct ClusterGeneralInfo : public MessageIn {
+		explicit ClusterGeneralInfo(const std::bitset<64> &payload);
+		uint32_t get_id() override;
+		std::bitset<8> id;
+		std::bitset<13> distLong;
+		std::bitset<10> distLat;
+		std::bitset<10> vrelLong;
+		std::bitset<9> vrelLat;
+		std::bitset<3> dynProp;
+		std::bitset<8> rcs;
+		void print(std::ostream &os) const override;
+		virtual ~ClusterGeneralInfo() = default;
+	};
+
+//0x702 : Object quality information
+	struct ClusterQualityInfo : public MessageIn {
+		explicit ClusterQualityInfo(const std::bitset<64> &payload);
+		uint32_t get_id() override;
+		std::bitset<8> id;
+		std::bitset<5> distLong_rms;
+		std::bitset<5> distLat_rms;
+		std::bitset<5> vrelLong_rms;
+		std::bitset<5> vrelLat_rms;
+		std::bitset<3> pdh0;
+		std::bitset<5> invalidState;
+		std::bitset<3> ambigState;
+		void print(std::ostream &os) const override;
+		virtual ~ClusterQualityInfo() = default;
+	};
+
+
+	//0x201 : Radar Configuration
+	struct RadarState : public MessageIn {
+		explicit RadarState(const std::bitset<64> &payload);
+		uint32_t get_id() override;
+		std::bitset<1> NvmWriteStatus;
+		std::bitset<1> NvmReadStatus;
+		std::bitset<10> maxDistanceCfg;
+		std::bitset<1> persistentError;
+		std::bitset<1> interference;
+		std::bitset<1> temperatureError;
+		std::bitset<1> temporaryError;
+		std::bitset<1> voltageError;
+		std::bitset<3> radarPowerCfg;
+		std::bitset<3> sortIndex;
+		std::bitset<3> sensorId;
+		std::bitset<2> motionRxState;
+		std::bitset<1> sendExtInfoCfg;
+		std::bitset<1> sendQualityCfg;
+		std::bitset<2> outputTypeCfg;
+		std::bitset<1> controlRelayCfg;
+		std::bitset<3> rcsThreshold;
+		void print(std::ostream &os) const override;
+		virtual ~RadarState() = default;
+	};
+
+	// 0x203
+	struct FilterStateHeader : public MessageIn {
+		explicit FilterStateHeader(const std::bitset<64> &payload);
+		uint32_t get_id() override;
+		std::bitset<5> nOfClusterFilterCfg;
+		std::bitset<5> nOfObjectFilterCfg;
+		void print(std::ostream &os) const override;
+		virtual ~FilterStateHeader() = default;
+	};
+
+	// 0x204
+	struct FilterStateConfig : public MessageIn {
+		explicit FilterStateConfig(const std::bitset<64> &payload);
+		uint32_t get_id() override;
+		std::bitset<1> type;
+		std::bitset<4> index;
+		std::bitset<1> active;
+		std::variant<std::bitset<12>, std::bitset<13>> min;
+		std::variant<std::bitset<12>, std::bitset<13>> max;
+		void print(std::ostream &os) const override;
+		virtual ~FilterStateConfig() = default;
+	};
+
+	// 0x408
+	struct CollisionDetectionState : public MessageIn {
+
+	};
+
+	// 0x402
+	struct CollisionDetectionRegionState : public MessageIn {
+
+	};
+
+	// 0x700
+	struct VersionId : public MessageIn {
+
+	};
+
+
+	//0x200 : Radar Configuration
+	struct RadarConfig : public MessageOut {
 		RadarConfig() = default;
-		explicit RadarConfig(const std::bitset<64> &payload);
 		uint32_t get_id() override;
 		std::bitset<64> to_payload() const override;
 		std::bitset<1> maxDistance_valid;
@@ -110,8 +221,7 @@ namespace message {
 	};
 
 //0x202 : Object Filter Config
-	struct FilterConfig : MessageBase {
-		explicit FilterConfig(const std::bitset<64> &payload);
+	struct FilterConfig : public MessageOut {
 		uint32_t get_id() override;
 		std::bitset<64> to_payload() const override;
 		std::bitset<1> valid;
@@ -124,31 +234,33 @@ namespace message {
 		virtual ~FilterConfig() = default;
 	};
 
-	//0x201 : Radar Configuration
-	struct RadarState : MessageBase {
-		RadarState() = default;
-		explicit RadarState(const std::bitset<64> &payload);
+	//0x300
+	struct SpeedInformation : public MessageOut {
+		SpeedInformation() = default;
 		uint32_t get_id() override;
 		std::bitset<64> to_payload() const override;
-		std::bitset<1> NvmWriteStatus;
-		std::bitset<1> NvmReadStatus;
-		std::bitset<10> maxDistanceCfg;
-		std::bitset<1> persistentError;
-		std::bitset<1> interference;
-		std::bitset<1> temperatureError;
-		std::bitset<1> temporaryError;
-		std::bitset<1> voltageError;
-		std::bitset<3> radarPowerCfg;
-		std::bitset<3> sortIndex;
-		std::bitset<3> sensorId;
-		std::bitset<2> motionRxState;
-		std::bitset<1> sendExtInfoCfg;
-		std::bitset<1> sendQualityCfg;
-		std::bitset<2> outputTypeCfg;
-		std::bitset<1> controlRelayCfg;
-		std::bitset<3> rcsThreshold;
+		std::bitset<2> speedDirection;
+		std::bitset<13> speed;
 		void print(std::ostream &os) const override;
-		virtual ~RadarState() = default;
+		virtual ~SpeedInformation() = default;
+	};
+
+	//0x301
+	struct YawRateInformation : public MessageOut {
+		YawRateInformation() = default;
+		uint32_t get_id() override;
+		std::bitset<64> to_payload() const override;
+		std::bitset<16> yawRate;
+		void print(std::ostream &os) const override;
+		virtual ~YawRateInformation() = default;
+	};
+
+	struct CollisionDetectionCfg : public MessageOut {
+
+	};
+
+	struct CollisionDetectionRegionCfg : public MessageOut {
+
 	};
 
 }
