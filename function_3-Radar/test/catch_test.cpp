@@ -44,7 +44,7 @@ TEST_CASE("test_parse_message") {
 		                       0b11111111};
 
 		auto msg = Radar::parse_message(id, data);
-		auto obj_list_status = dynamic_cast<ObjectListStatus *>(msg.get());
+		auto obj_list_status = dynamic_cast<message::ObjectListStatus *>(msg.get());
 		CAPTURE(*msg);
 		REQUIRE(obj_list_status != nullptr);
 		REQUIRE(obj_list_status->nofObjects.to_ulong() == 14);
@@ -57,7 +57,7 @@ TEST_CASE("test_parse_message") {
 		std::uint8_t data[] = {0xF8, 0x00, 0x00, 0x00, 0x08, 0x9C, 0x00, 0x00};
 
 		auto msg = Radar::parse_message(id, data);
-		auto radar_config = dynamic_cast<RadarConfig *>(msg.get());
+		auto radar_config = dynamic_cast<message::RadarConfig *>(msg.get());
 		CAPTURE(*msg);
 		REQUIRE(radar_config != nullptr);
 		REQUIRE(radar_config->outputType_valid.to_ulong() == 1);
@@ -69,7 +69,7 @@ TEST_CASE("test_parse_message") {
 		std::uint8_t data[] = {0xF8, 0x00, 0x00, 0x00, 0x10, 0x9C, 0x00, 0x00};
 
 		auto msg = Radar::parse_message(id, data);
-		auto radar_config = dynamic_cast<RadarConfig *>(msg.get());
+		auto radar_config = dynamic_cast<message::RadarConfig *>(msg.get());
 		CAPTURE(*msg);
 		REQUIRE(radar_config != nullptr);
 		REQUIRE(radar_config->outputType_valid.to_ulong() == 1);

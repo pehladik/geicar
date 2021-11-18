@@ -25,7 +25,7 @@ public:
 	 * @param config The configuration to send. All optional attributes that are not set are not modified.
 	 */
 	void send_config(const RadarConfiguration &config);
-
+    static std::unique_ptr<message::MessageIn> parse_message(std::uint32_t id, std::uint8_t data[8]);
 	virtual ~Radar() = default;
 
 	/**
@@ -41,7 +41,6 @@ public:
 protected:
 	virtual std::unique_ptr<message::MessageIn> receive() = 0;
 	virtual void send(std::unique_ptr<message::MessageOut> msg) = 0;
-	static std::unique_ptr<message::MessageIn> parse_message(std::uint32_t id, std::uint8_t data[8]);
 	void generate_measure();
 	void write_to_dump_file(uint32_t ident, const uint8_t data[8]);
 	std::deque<std::unique_ptr<message::MessageIn>> message_queue{};
