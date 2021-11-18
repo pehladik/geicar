@@ -27,8 +27,8 @@ struct Coord {
 };
 
 constexpr Coord radar_to_screen_coord(double lon, double lat) {
-	return {static_cast<float>((lat - Object::DIST_LAT_MIN_OBJECTS - 195.) * 7.),
-	        static_cast<float>((lon - Object::DIST_LONG_MIN - 430.) * 7.)};
+	return {static_cast<float>((lat - Object::DIST_LAT_MIN_OBJECTS - 195.) * 18.),
+	        static_cast<float>((lon - Object::DIST_LONG_MIN - 468.) * 18.)};
 }
 
 template<std::size_t N>
@@ -194,7 +194,7 @@ void RadarVisualizer::keyReleased(int key) {
 	}
 	if (key == 'P') {
 		if (radar->state.has_value()) {
-			config.radarPower = static_cast<RadarPower>(static_cast<int>(radar->state->radarPowerCfg) + 1 % 4);
+			config.radarPower = static_cast<RadarPower>((static_cast<int>(radar->state->radarPowerCfg) + 1) % 4);
 		} else {
 			config.radarPower = RadarPower::STANDARD;
 		}
@@ -209,9 +209,9 @@ void RadarVisualizer::keyReleased(int key) {
 	}
 	if (key == 'D') {
 		if (radar->state.has_value()) {
-			config.maxDistance = 296 + ((radar->state->maxDistanceCfg - 296) % 54) + 10;
+			config.maxDistance = 196 + ((radar->state->maxDistanceCfg - 196 + 10) % 64);
 		} else {
-			config.maxDistance = 296;
+			config.maxDistance = 196;
 		}
 	}
 	radar->send_config(config);
