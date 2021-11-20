@@ -9,9 +9,13 @@
 
 using namespace message;
 
-Radar::Radar(const std::optional<std::filesystem::path> &dump_file_path) : dump_file{dump_file_path} {
-	if (dump_file.has_value() && !dump_file->good()) {
-		throw std::runtime_error{"Failed to open the file " + dump_file_path->string()};
+Radar::Radar(const std::optional<std::filesystem::path> &dump_file_path) {
+	if (dump_file_path.has_value()) {
+		dump_file.emplace();
+		dump_file->open(dump_file_path->string(), std::ios_base::app);
+		if (!dump_file->good()) {
+			throw std::runtime_error{"Failed to open the file " + dump_file_path->string()};
+		}
 	}
 }
 
