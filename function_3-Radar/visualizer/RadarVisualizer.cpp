@@ -13,29 +13,10 @@ RadarVisualizer::RadarVisualizer(const std::filesystem::path &path,
 	}
 }
 
-
-void RadarVisualizer::setup() {
-}
+void RadarVisualizer::setup() {}
 
 constexpr double deg2rad(double a) {
 	return a * (M_PI / 180);
-}
-
-struct Coord {
-	float x;
-	float y;
-};
-
-constexpr Coord radar_to_screen_coord(double lon, double lat) {
-	return {static_cast<float>((lat - Object::DIST_LAT_MIN_OBJECTS - 195.) * 18.),
-	        static_cast<float>((lon - Object::DIST_LONG_MIN - 468.) * 18.)};
-}
-
-template<std::size_t N>
-void draw_polygon(piksel::Graphics &g, const std::array<Coord, N> &points) {
-	for (int i = 0; i < points.size() - 1; ++i) {
-		g.line(points[i].x, points[i].y, points[i + 1].x, points[i + 1].y);
-	}
 }
 
 void RadarVisualizer::draw(piksel::Graphics &g) {
@@ -46,6 +27,8 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 	const glm::vec4 green{0, 0.8, 0, 1};
 	const glm::vec4 blue{0, 0, 1, 1};
 	const glm::vec4 violet{1, 0, 1, 1};
+	const glm::vec4 yellow{.8, .8, 0, 1};
+	const glm::vec4 cyan{0, 1, 1, 1};
 	const glm::vec4 gray{0.75, 0.75, 0.75, 1};
 
 	g.ellipseMode(piksel::DrawMode::CENTER);
@@ -54,28 +37,36 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 	g.strokeWeight(2);
 	g.stroke(black);
 	g.noFill();
-	g.textSize(30);
+	g.textSize(20);
 
 	g.background({1, 1, 1, 1});
 
 	g.push();
 	g.noStroke();
 	g.fill(red);
-	g.text("car", 50, 100);
+	g.text("car", 20, 70);
 	g.fill(green);
-	g.text("pedestrians", 50, 150);
+	g.text("pedestrians", 20, 100);
 	g.fill(blue);
-	g.text("points", 50, 200);
+	g.text("points", 20, 130);
 	g.fill(violet);
-	g.text("bicycle", 50, 250);
+	g.text("bicycle", 20, 160);
+	g.fill(yellow);
+	g.text("motorcycle", 20, 190);
+	g.fill(cyan);
+	g.text("truck", 20, 220);
+	g.fill(gray);
+	g.text("wide", 20, 250);
 	g.fill(black);
-	g.text("other", 50, 300);
+	g.text("other", 20, 280);
+
 	if (radar->state.has_value()) {
 		g.textSize(11);
 		std::stringstream ss;
 		ss << radar->state.value();
-		g.text(ss.str(), 0, 2 * height / 3);
+		g.text(ss.str(), 20, 2 * height / 3);
 	}
+
 	g.textSize(18);
 	std::stringstream ss_key;
 	ss_key << (char) m_key;
@@ -83,9 +74,8 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 	g.text(std::to_string(m_key), width - 40, 45);
 	g.pop();
 
-
 	// radar
-	const Coord radar_coord = radar_to_screen_coord(0, 0);
+	const auto radar_coord = radar_to_screen_coord(0, 0);
 	g.push();
 	g.fill(red);
 	g.noStroke();
@@ -93,7 +83,7 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 	g.pop();
 
 	// range
-	const std::array<Coord, 14> range{
+	const std::array<glm::tvec2<float>, 14> range{
 			radar_coord,
 			radar_to_screen_coord(20 * sin(deg2rad(60)), 20 * cos(deg2rad(60))),
 			radar_to_screen_coord(80 * sin(deg2rad(40)), 80 * cos(deg2rad(40))),
@@ -122,18 +112,16 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 		g.push();
 		g.fill(black);
 		g.noStroke();
-		g.text(std::to_string(nObjects) + " objects", 50, 50);
+		g.text(std::to_string(nObjects) + " objects", 20, 40);
 		g.pop();
 
 		for (int i = 0; i < nObjects; i++) {
 			const Object &object = measure.objects[i];
 
-			const Coord screen_coord = radar_to_screen_coord(object.distance_lat, object.distance_long);
+			const auto screen_coord = radar_to_screen_coord(object.distance_lat, object.distance_long);
 			const float x = screen_coord.x;
 			const float y = screen_coord.y;
 			const auto dist = sqrt(pow(object.distance_lat, 2) + pow(object.distance_long, 2));
-			std::stringstream ss_dist;
-			ss_dist << std::fixed << std::setprecision(1) << dist << "m";
 
 			glm::tvec4<float> transparency{0, 0, 0, 0};
 			if (object.quality_info.has_value()) {
@@ -141,39 +129,37 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 			}
 
 			g.push();
-			g.textSize(15);
-			g.strokeWeight(1);
-			g.noStroke();
-			g.fill(gray - transparency);
-			g.text(ss_dist.str(), x, y);
+			g.strokeWeight(std::max(3., object.radar_cross_section + 20));
+			g.stroke(black - transparency);
+			if (object.extended_info.has_value()) {
+				if (object.extended_info->object_class == ObjectClass::car) {
+					g.stroke(red - transparency);
+				} else if (object.extended_info->object_class == ObjectClass::pedestrian) {
+					g.stroke(green - transparency);
+				} else if (object.extended_info->object_class == ObjectClass::point) {
+					g.stroke(blue - transparency);
+				} else if (object.extended_info->object_class == ObjectClass::bicycle) {
+					g.stroke(violet - transparency);
+				} else if (object.extended_info->object_class == ObjectClass::motorcycle) {
+					g.stroke(yellow - transparency);
+				} else if (object.extended_info->object_class == ObjectClass::truck) {
+					g.stroke(cyan - transparency);
+				} else if (object.extended_info->object_class == ObjectClass::wide) {
+					g.stroke(gray - transparency);
+				}
+			}
+			g.point(x, y);
 			g.pop();
 
-
-			if (object.extended_info->object_class == ObjectClass::car) {
+			if (display_distance) {
+				std::stringstream ss_dist;
+				ss_dist << std::fixed << std::setprecision(1) << dist << "m";
 				g.push();
-				g.stroke(red - transparency);
-				g.ellipse(x, y, 10 * sqrt(object.radar_cross_section), 10 * sqrt(object.radar_cross_section));
-				g.pop();
-			} else if (object.extended_info->object_class == ObjectClass::pedestrian) {
-				g.push();
-				g.stroke(green - transparency);
-				g.ellipse(x, y, 10 * sqrt(object.radar_cross_section), 10 * sqrt(object.radar_cross_section));
-				g.pop();
-			} else if (object.extended_info->object_class == ObjectClass::point) {
-				g.push();
-				g.stroke(blue - transparency);
-				g.strokeWeight(5);
-				g.point(x, y);
-				g.pop();
-			} else if (object.extended_info->object_class == ObjectClass::bicycle) {
-				g.push();
-				g.stroke(violet - transparency);
-				g.ellipse(x, y, 10 * sqrt(object.radar_cross_section), 10 * sqrt(object.radar_cross_section));
-				g.pop();
-			} else {
-				g.push();
-				g.stroke(black - transparency);
-				g.ellipse(x, y, 10 * sqrt(object.radar_cross_section), 10 * sqrt(object.radar_cross_section));
+				g.textSize(15);
+				g.strokeWeight(1);
+				g.noStroke();
+				g.fill(gray - transparency);
+				g.text(ss_dist.str(), x, y);
 				g.pop();
 			}
 		}
@@ -214,5 +200,42 @@ void RadarVisualizer::keyReleased(int key) {
 			config.maxDistance = 196;
 		}
 	}
+	if (key == 59) { // 'M' on azerty keyboards
+		display_distance = !display_distance;
+	}
 	radar->send_config(config);
 }
+
+glm::tvec2<float> RadarVisualizer::radar_to_screen_coord(double lon, double lat) {
+	return {static_cast<float>(lat - Object::DIST_LAT_MIN_OBJECTS + offset.x) * zoom,
+	        static_cast<float>(lon - Object::DIST_LONG_MIN + offset.y) * zoom};
+}
+
+void RadarVisualizer::mouseWheel(int nb) {
+	float last_zoom = zoom;
+	zoom *= (1 + 0.15f * static_cast<float>(nb));
+	auto new_mouse = mouse_position * float(zoom / last_zoom);
+	auto delta = mouse_position - new_mouse;
+	offset += delta / zoom;
+}
+
+void RadarVisualizer::mouseMoved(int x, int y) {
+	const auto delta = glm::vec2{x, y} - mouse_position;
+	mouse_position = {x, y};
+	if (clicking) {
+		offset += delta / zoom;
+	}
+}
+
+void RadarVisualizer::mousePressed(int button) {
+	if (button == 0) {
+		clicking = true;
+	}
+}
+
+void RadarVisualizer::mouseReleased(int button) {
+	if (button == 0) {
+		clicking = false;
+	}
+}
+

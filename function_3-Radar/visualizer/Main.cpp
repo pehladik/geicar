@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
 	}
 	if (!path.has_value()) print_usage_and_exit(argv[0]);
 
-	const bool simulate = path->substr(path->size() - 4) == ".txt";
+	const bool simulate = path->substr(0, 4) != "/dev";
 
 	RadarVisualizer app{*path, simulate, dump_file_path};
 	app.start();
