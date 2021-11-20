@@ -20,32 +20,46 @@ class Talker:
             'target_wheel_angular_rate': target_wheel_angular_rate,
             'target_gear': target_gear
             }))
-        #self.seq=self.seq+1
-        #print(self.seq)
+
+class Listener:
+    def __init__(self):
+        self.listener = roslibpy.Topic(client, '/radar', 'std_msgs/String')
+        self.seq=0
+        self.obs=0
+    def receive_message(self,msg):
+        self.obs = msg['data']
+
+    def listener_sub(self):
+        #self.listener.subscribe(lambda message: print('Heard talking: ' + message['data']))
+        self.listener.subscribe(self.receive_message)
+
+
 
 talker=Talker()
+listener=Listener()
 PI=3.14
 while client.is_connected:
-    obstacle=input("0=pas obstacle 1=obstacle 2=tourner_gauche 3=tourner_droite : ")
+    #obstacle=input("Simulation: \n 0: Accelerate \n 1: Obstacle (brake) \n 2: Turn left \n 3: Turn right \n Input: ")
+    listener.listener_sub()
+    obstacle=listener.obs;
     try:
         obstacle=int(obstacle)
     except:
         obstacle=0
     #acceleration_pct,braking_pct,target_wheel_angle,target_wheel_angular_rate,target_gear
     if(obstacle==0):
+        print("No obstacle")
         talker.talker_pub(1,0,0,0,1)
-        #time.sleep(5)
+        time.sleep(5)
     elif(obstacle==1):
+        print("OBSTACLE")
         talker.talker_pub(0,1,0,0,1)
+        time.sleep(5)
     elif(obstacle==2):
         talker.talker_pub(0,0,-PI/4,0,1)
     elif(obstacle==3):
         talker.talker_pub(0,0,PI/4,0,1)
-
-
-
-    
-    print('Sending message...')
+    #print('Sending message...')
     #time.sleep(1)
 
 talker.unadvertise()
