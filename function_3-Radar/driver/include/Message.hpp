@@ -23,7 +23,8 @@ namespace message {
 		virtual std::bitset<64> to_payload() const = 0;
 	};
 
-//0x60A : Object list status
+    // ------------------------------OBJECT LIST-----------------------------------------
+    //0x60A : Object list status
 	struct ObjectListStatus : public MessageIn {
 		explicit ObjectListStatus(const std::bitset<64> &payload);
 		uint32_t get_id() override;
@@ -34,7 +35,7 @@ namespace message {
 		virtual ~ObjectListStatus() = default;
 	};
 
-//0x60B : Object General information
+    //0x60B : Object General information
 	struct ObjectGeneralInfo : public MessageIn {
 		explicit ObjectGeneralInfo(const std::bitset<64> &payload);
 		uint32_t get_id() override;
@@ -49,7 +50,7 @@ namespace message {
 		virtual ~ObjectGeneralInfo() = default;
 	};
 
-//0x60C : Object quality information
+    //0x60C : Object quality information
 	struct ObjectQualityInfo : public MessageIn {
 		explicit ObjectQualityInfo(const std::bitset<64> &payload);
 		uint32_t get_id() override;
@@ -67,7 +68,7 @@ namespace message {
 		virtual ~ObjectQualityInfo() = default;
 	};
 
-//0x60D : Object Extended Information
+    //0x60D : Object Extended Information
 	struct ObjectExtInfo : public MessageIn {
 		explicit ObjectExtInfo(const std::bitset<64> &payload);
 		uint32_t get_id() override;
@@ -82,8 +83,8 @@ namespace message {
 		virtual ~ObjectExtInfo() = default;
 	};
 
-
-//0x600 : Cluster list status
+    // ------------------------------CLUSTER LIST-----------------------------------------
+    //0x600 : Cluster list status
 	struct ClusterListStatus : public MessageIn {
 		explicit ClusterListStatus(const std::bitset<64> &payload);
 		uint32_t get_id() override;
@@ -95,7 +96,7 @@ namespace message {
 		virtual ~ClusterListStatus() = default;
 	};
 
-//0x701 : Cluster General information
+    //0x701 : Cluster General information
 	struct ClusterGeneralInfo : public MessageIn {
 		explicit ClusterGeneralInfo(const std::bitset<64> &payload);
 		uint32_t get_id() override;
@@ -110,7 +111,7 @@ namespace message {
 		virtual ~ClusterGeneralInfo() = default;
 	};
 
-//0x702 : Object quality information
+    //0x702 : Object quality information
 	struct ClusterQualityInfo : public MessageIn {
 		explicit ClusterQualityInfo(const std::bitset<64> &payload);
 		uint32_t get_id() override;
@@ -126,7 +127,7 @@ namespace message {
 		virtual ~ClusterQualityInfo() = default;
 	};
 
-
+    // ------------------------------STATE OUTPUT-----------------------------------------
 	//0x201 : Radar Configuration
 	struct RadarState : public MessageIn {
 		explicit RadarState(const std::bitset<64> &payload);
@@ -152,7 +153,7 @@ namespace message {
 		virtual ~RadarState() = default;
 	};
 
-	// 0x203
+	// 0x203 : Filter Configuration State Header
 	struct FilterStateHeader : public MessageIn {
 		explicit FilterStateHeader(const std::bitset<64> &payload);
 		uint32_t get_id() override;
@@ -162,7 +163,7 @@ namespace message {
 		virtual ~FilterStateHeader() = default;
 	};
 
-	// 0x204
+	// 0x204 : Filter Configuration State
 	struct FilterStateConfig : public MessageIn {
 		explicit FilterStateConfig(const std::bitset<64> &payload);
 		uint32_t get_id() override;
@@ -175,22 +176,47 @@ namespace message {
 		virtual ~FilterStateConfig() = default;
 	};
 
-	// 0x408
+	// 0x408 : Collision Detection State
 	struct CollisionDetectionState : public MessageIn {
-
+        explicit CollisionDetectionState(const std::bitset<64> &payload);
+        uint32_t get_id() override;
+        std::bitset<4> nOfRegions;
+        std::bitset<1> active;
+        std::bitset<8> minDetectTime;
+        std::bitset<16> measCounter;
+        void print(std::ostream &os) const override;
+        virtual ~CollisionDetectionState() = default;
 	};
 
-	// 0x402
+	// 0x402 : Collision Detection Region State
 	struct CollisionDetectionRegionState : public MessageIn {
-
+        explicit CollisionDetectionRegionState(const std::bitset<64> &payload);
+        uint32_t get_id() override;
+        std::bitset<3> regionID;
+        std::bitset<2> warningLevel;
+        std::bitset<13> point1x;
+        std::bitset<11> point1y;
+        std::bitset<13> point2x;
+        std::bitset<11> point2y;
+        std::bitset<8> nOfObjects;
+        void print(std::ostream &os) const override;
+        virtual ~CollisionDetectionRegionState() = default;
 	};
 
-	// 0x700
+	// 0x700 : Software Version ID
 	struct VersionId : public MessageIn {
-
+        explicit VersionId(const std::bitset<64> &payload);
+        uint32_t get_id() override;
+        std::bitset<8> majorRelease;
+        std::bitset<8> minorRelease;
+        std::bitset<8> patchLevel;
+        std::bitset<1> extendedRange;
+        std::bitset<1> countryCode;
+        void print(std::ostream &os) const override;
+        virtual ~VersionId() = default;
 	};
 
-
+    // ------------------------------CONFIGURATION MESSAGES-----------------------------------------
 	//0x200 : Radar Configuration
 	struct RadarConfig : public MessageOut {
 		RadarConfig() = default;
@@ -220,7 +246,7 @@ namespace message {
 		virtual ~RadarConfig() = default;
 	};
 
-//0x202 : Object Filter Config
+    //0x202 : Cluster and Object Filter Config
 	struct FilterConfig : public MessageOut {
 		uint32_t get_id() override;
 		std::bitset<64> to_payload() const override;
@@ -234,7 +260,36 @@ namespace message {
 		virtual ~FilterConfig() = default;
 	};
 
-	//0x300
+    //0x400 : Collision Detection Configuration
+    struct CollisionDetectionCfg : public MessageOut {
+        uint32_t get_id() override;
+        std::bitset<64> to_payload() const override;
+        std::bitset<1> warningReset;
+        std::bitset<1> activate;
+        std::bitset<1> minTimeValid;
+        std::bitset<1> clearRegions;
+        std::bitset<8> minDetectTime;
+        void print(std::ostream &os) const override;
+        virtual ~CollisionDetectionCfg() = default;
+    };
+
+    //0x401 : Collision Detection Region Configuration
+    struct CollisionDetectionRegionCfg : public MessageOut {
+        uint32_t get_id() override;
+        std::bitset<64> to_payload() const override;
+        std::bitset<1> activate;
+        std::bitset<1> coordinatesValid;
+        std::bitset<3> regionId;
+        std::bitset<13> point1x;
+        std::bitset<11> point1y;
+        std::bitset<13> point2x;
+        std::bitset<11> point2y;
+        void print(std::ostream &os) const override;
+        virtual ~CollisionDetectionRegionCfg() = default;
+    };
+
+    // ---------------------------MOTION INPUT SIGNALS-----------------------------------------
+	//0x300 : Speed Information
 	struct SpeedInformation : public MessageOut {
 		SpeedInformation() = default;
 		uint32_t get_id() override;
@@ -245,7 +300,7 @@ namespace message {
 		virtual ~SpeedInformation() = default;
 	};
 
-	//0x301
+	//0x301 : Yaw Rate Information
 	struct YawRateInformation : public MessageOut {
 		YawRateInformation() = default;
 		uint32_t get_id() override;
@@ -253,14 +308,6 @@ namespace message {
 		std::bitset<16> yawRate;
 		void print(std::ostream &os) const override;
 		virtual ~YawRateInformation() = default;
-	};
-
-	struct CollisionDetectionCfg : public MessageOut {
-
-	};
-
-	struct CollisionDetectionRegionCfg : public MessageOut {
-
 	};
 
 }
