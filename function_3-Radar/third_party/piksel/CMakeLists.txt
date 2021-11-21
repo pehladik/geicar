@@ -1,15 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 project(piksel)
 set(CMAKE_CXX_STANDARD 11)
-if (EMSCRIPTEN)
-    set(CMAKE_CXX_COMPILER em++ PARENT_SCOPE)
-    set(CMAKE_CXX_FLAGS "-s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3 -s WASM=1 --emrun --preload-file data --shell-file shell.html" PARENT_SCOPE)
-    set(CMAKE_EXECUTABLE_SUFFIX ".html" PARENT_SCOPE)
-else ()
-    set(CMAKE_CXX_COMPILER g++ PARENT_SCOPE)
-endif (EMSCRIPTEN)
-
-set(CMAKE_VERBOSE_MAKEFILE ON)
 
 set(MSDFGEN_SOURCES
     lib/msdfgen/msdfgen/core/Bitmap.cpp
