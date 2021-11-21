@@ -22,4 +22,4 @@ target_link_libraries(radar_logger PUBLIC radar_driver)
 
 add_executable(radar_test test/catch_test.cpp)
 target_link_libraries(radar_test PRIVATE radar_driver)
-target_include_directories(radar_test PRIVATE driver/include)
+target_include_directories(radar_test PRIVATE driver/include third_party/catch)
