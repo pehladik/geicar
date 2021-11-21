@@ -21,7 +21,7 @@ public:
 private:
 	template<std::size_t N>
 	void draw_polygon(piksel::Graphics &g, const std::array<glm::vec2, N> &points);
-	glm::vec2 radar_to_screen_coord(double lon, double lat);
+	glm::vec2 radar_to_screen_coord(double lon, double lat) const;
 	int m_key;
 	std::unique_ptr<Radar> radar;
 	glm::vec2 offset{-195., -468};
@@ -29,6 +29,7 @@ private:
 	float zoom = 18;
 	bool clicking = false;
 	bool display_distance = true;
+	bool display_speed = true;
 };
 
 

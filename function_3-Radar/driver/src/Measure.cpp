@@ -47,6 +47,8 @@ Object::Object(const message::ObjectGeneralInfo &general_info_msg,
 	distance_long = DIST_LONG_MIN + static_cast<double>(general_info_msg.distLong.to_ulong()) * DIST_RES;
 	distance_lat = DIST_LAT_MIN_OBJECTS + static_cast<double>(general_info_msg.distLat.to_ulong()) * DIST_RES;
 	radar_cross_section = RCS_MIN + static_cast<double>(general_info_msg.rcs.to_ulong()) * RCS_RES;
+	relative_velocity_long = VREL_LONG_MIN + static_cast<double>(general_info_msg.vrelLong.to_ulong()) * VREL_RES;
+	relative_velocity_lat = VREL_LAT_MIN + static_cast<double>(general_info_msg.vrelLat.to_ulong()) * VREL_RES;
 }
 
 std::ostream &operator<<(std::ostream &os, const Object &object) {

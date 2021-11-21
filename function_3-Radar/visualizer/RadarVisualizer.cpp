@@ -85,18 +85,18 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 	// range
 	const std::array<glm::tvec2<float>, 14> range{
 			radar_coord,
-			radar_to_screen_coord(20 * sin(deg2rad(60)), 20 * cos(deg2rad(60))),
-			radar_to_screen_coord(80 * sin(deg2rad(40)), 80 * cos(deg2rad(40))),
-			radar_to_screen_coord(80 * sin(deg2rad(20)), 80 * cos(deg2rad(20))),
-			radar_to_screen_coord(80 * sin(deg2rad(9)), 80 * cos(deg2rad(9))),
-			radar_to_screen_coord(160 * sin(deg2rad(9)), 160 * cos(deg2rad(9))),
-			radar_to_screen_coord(250 * sin(deg2rad(4)), 250 * cos(deg2rad(4))),
-			radar_to_screen_coord(-250 * sin(deg2rad(4)), 250 * cos(deg2rad(4))),
-			radar_to_screen_coord(-160 * sin(deg2rad(9)), 160 * cos(deg2rad(9))),
-			radar_to_screen_coord(-80 * sin(deg2rad(9)), 80 * cos(deg2rad(9))),
-			radar_to_screen_coord(-80 * sin(deg2rad(20)), 80 * cos(deg2rad(20))),
-			radar_to_screen_coord(-80 * sin(deg2rad(40)), 80 * cos(deg2rad(40))),
-			radar_to_screen_coord(-20 * sin(deg2rad(60)), 20 * cos(deg2rad(60))),
+			radar_to_screen_coord(20 * cos(deg2rad(60)), 20 * sin(deg2rad(60))),
+			radar_to_screen_coord(80 * cos(deg2rad(40)), 80 * sin(deg2rad(40))),
+			radar_to_screen_coord(80 * cos(deg2rad(20)), 80 * sin(deg2rad(20))),
+			radar_to_screen_coord(80 * cos(deg2rad(9)), 80 * sin(deg2rad(9))),
+			radar_to_screen_coord(160 * cos(deg2rad(9)), 160 * sin(deg2rad(9))),
+			radar_to_screen_coord(250 * cos(deg2rad(4)), 250 * sin(deg2rad(4))),
+			radar_to_screen_coord(250 * cos(deg2rad(4)), -250 * sin(deg2rad(4))),
+			radar_to_screen_coord(160 * cos(deg2rad(9)), -160 * sin(deg2rad(9))),
+			radar_to_screen_coord(80 * cos(deg2rad(9)), -80 * sin(deg2rad(9))),
+			radar_to_screen_coord(80 * cos(deg2rad(20)), -80 * sin(deg2rad(20))),
+			radar_to_screen_coord(80 * cos(deg2rad(40)), -80 * sin(deg2rad(40))),
+			radar_to_screen_coord(20 * cos(deg2rad(60)), -20 * sin(deg2rad(60))),
 			radar_coord
 	};
 	g.push();
@@ -118,7 +118,7 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 		for (int i = 0; i < nObjects; i++) {
 			const Object &object = measure.objects[i];
 
-			const auto screen_coord = radar_to_screen_coord(object.distance_lat, object.distance_long);
+			const auto screen_coord = radar_to_screen_coord(object.distance_long, object.distance_lat);
 			const float x = screen_coord.x;
 			const float y = screen_coord.y;
 			const auto dist = sqrt(pow(object.distance_lat, 2) + pow(object.distance_long, 2));
@@ -150,6 +150,15 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 			}
 			g.point(x, y);
 			g.pop();
+
+			if (display_speed) {
+				g.push();
+				g.strokeWeight(1);
+				auto speed_vector_end = radar_to_screen_coord(object.distance_long + object.relative_velocity_long,
+				                                              object.distance_lat + object.relative_velocity_lat);
+				g.line(x, y, speed_vector_end.x, speed_vector_end.y);
+				g.pop();
+			}
 
 			if (display_distance) {
 				std::stringstream ss_dist;
@@ -203,12 +212,15 @@ void RadarVisualizer::keyReleased(int key) {
 	if (key == 59) { // 'M' on azerty keyboards
 		display_distance = !display_distance;
 	}
+	if (key == 'V') { // 'M' on azerty keyboards
+		display_speed = !display_speed;
+	}
 	radar->send_config(config);
 }
 
-glm::tvec2<float> RadarVisualizer::radar_to_screen_coord(double lon, double lat) {
-	return {static_cast<float>(lat - Object::DIST_LAT_MIN_OBJECTS + offset.x) * zoom,
-	        static_cast<float>(lon - Object::DIST_LONG_MIN + offset.y) * zoom};
+glm::tvec2<float> RadarVisualizer::radar_to_screen_coord(double lon, double lat) const {
+	return {static_cast<float>(lon - Object::DIST_LAT_MIN_OBJECTS + offset.x) * zoom,
+	        static_cast<float>(lat - Object::DIST_LONG_MIN + offset.y) * zoom};
 }
 
 void RadarVisualizer::mouseWheel(int nb) {
