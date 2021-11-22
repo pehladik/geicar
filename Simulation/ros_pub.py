@@ -38,10 +38,12 @@ class Listener:
 talker=Talker()
 listener=Listener()
 PI=3.14
+already_accelerated=False
 while client.is_connected:
     #obstacle=input("Simulation: \n 0: Accelerate \n 1: Obstacle (brake) \n 2: Turn left \n 3: Turn right \n Input: ")
     listener.listener_sub()
     obstacle=listener.obs;
+        
     try:
         obstacle=int(obstacle)
     except:
@@ -49,10 +51,14 @@ while client.is_connected:
     #acceleration_pct,braking_pct,target_wheel_angle,target_wheel_angular_rate,target_gear
     if(obstacle==0):
         print("No obstacle")
-        talker.talker_pub(1,0,0,0,1)
-        time.sleep(5)
+        if(already_accelerated==False):
+            already_accelerated=True
+            talker.talker_pub(1,0,0,0,1)
+            time.sleep(5)       
     elif(obstacle==1):
         print("OBSTACLE")
+        already_accelerated=False
+        
         talker.talker_pub(0,1,0,0,1)
         time.sleep(5)
     elif(obstacle==2):
