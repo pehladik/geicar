@@ -31,14 +31,48 @@ The projects are (or were) surpervised by:
 - Any C++ compiler (`sudo apt install build-essential`)
 - CMake
 
-### Building
+### Visualizer
 
-Clone the project and cd into it. Then run the following commands:
+#### Building
+
+Clone the project and cd into it.
 
 ```bash
 mkdir build
 cd build
 cmake ..
 cmake --build . --target radar_visualizer
-function_3-Radar/radar_visualizer
+function_3-Radar/radar_visualizer <path/to/dump_file_or_simplyCAN_device>
 ```
+
+Add the `-dump <path>` option to dump the raw radar messages to a file in order to replay them.
+
+#### Commands
+
+You can pan and zoom using the mouse (left click and scroll).
+
+You can toggle displaying the speed vectors, distances and warning regions with the keys S, M and W respectively.
+
+You can change the configuration of the radar with the keys D (max distance), O (objects or clusters), P (power) and R (RCS
+threshold).
+
+### Ros node
+
+#### Building
+
+Clone the project and cd into it.
+
+```bash
+mkdir build
+cd build
+cmake ..
+cmake --build . --target radar_ros_node
+
+# In separate terminals:
+roscore
+roslaunch rosbridge_server rosbridge_websocket.launch
+devel/lib/radar_ros/radar_ros_node <path/to/dump_file_or_simplyCAN_device>
+```
+
+Add the `-dump <path>` option to dump the raw radar messages to a file in order to replay them.
+
