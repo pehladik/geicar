@@ -1,5 +1,6 @@
 #include <iostream>
 #include <sstream>
+#include <algorithm>
 #include "RadarVisualizer.hpp"
 
 RadarVisualizer::RadarVisualizer(const std::filesystem::path &path,
@@ -17,6 +18,12 @@ void RadarVisualizer::setup() {}
 
 constexpr double deg2rad(double a) {
 	return a * (M_PI / 180);
+}
+
+bool RadarVisualizer::is_obstacle_dangerous(const Object &obj) const {
+	return obj.distance_long < warning_region_size.x &&
+	       obj.distance_lat < warning_region_size.y / 2 &&
+	       obj.distance_lat > -warning_region_size.y / 2;
 }
 
 void RadarVisualizer::draw(piksel::Graphics &g) {
@@ -108,6 +115,33 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 	if (radar->measure.has_value()) {
 		auto &measure = radar->measure.value();
 		unsigned nObjects = measure.objects.size();
+
+		if (display_warning) {
+			g.push();
+			auto warning_box1 = radar_to_screen_coord(0, -warning_region_size.y / 2);
+			auto warning_box2 = radar_to_screen_coord(warning_region_size.x, warning_region_size.y / 2);
+			g.noFill();
+			g.strokeWeight(1);
+			g.stroke(red);
+			g.rectMode(piksel::DrawMode::CORNERS);
+			g.rect(warning_box1.x, warning_box1.y, warning_box2.x, warning_box2.y);
+			std::stringstream ss;
+			g.fill(red);
+			g.noStroke();
+			ss << std::setprecision(2) << warning_region_size.x << "*" << warning_region_size.y;
+			g.text(ss.str(), width - 130, height - 40);
+			g.pop();
+			bool danger = std::any_of(measure.objects.begin(), measure.objects.end(),
+			                          [this](const Object &o) {return is_obstacle_dangerous(o);});
+			if (danger) {
+				g.push();
+				g.textSize(100);
+				g.noStroke();
+				g.fill(red);
+				g.text("obstacle", width - 630, 130);
+				g.pop();
+			}
+		}
 
 		g.push();
 		g.fill(black);
@@ -212,15 +246,23 @@ void RadarVisualizer::keyReleased(int key) {
 	if (key == 59) { // 'M' on azerty keyboards
 		display_distance = !display_distance;
 	}
-	if (key == 'V') { // 'M' on azerty keyboards
+	if (key == 'V') {
 		display_speed = !display_speed;
+	}
+	if (key == 'Z') { // 'W' on azerty keyboards
+		display_warning = !display_warning;
 	}
 	radar->send_config(config);
 }
 
 glm::tvec2<float> RadarVisualizer::radar_to_screen_coord(double lon, double lat) const {
-	return {static_cast<float>(lon - Object::DIST_LAT_MIN_OBJECTS + offset.x) * zoom,
-	        static_cast<float>(lat - Object::DIST_LONG_MIN + offset.y) * zoom};
+	return {(lon + offset.x) * zoom,
+	        (lat + offset.y) * zoom};
+}
+
+glm::vec2 RadarVisualizer::screen_to_radar_coord(const glm::vec2 &coord) const {
+	return {coord.x / zoom - offset.x,
+	        coord.y / zoom - offset.y};
 }
 
 void RadarVisualizer::mouseWheel(int nb) {
@@ -234,20 +276,31 @@ void RadarVisualizer::mouseWheel(int nb) {
 void RadarVisualizer::mouseMoved(int x, int y) {
 	const auto delta = glm::vec2{x, y} - mouse_position;
 	mouse_position = {x, y};
-	if (clicking) {
+	if (left_clicking) {
 		offset += delta / zoom;
+	}
+	if (right_clicking) {
+		warning_region_size = screen_to_radar_coord(mouse_position);
+		warning_region_size.y *= 2;
+		warning_region_size.y = abs(warning_region_size.y);
 	}
 }
 
 void RadarVisualizer::mousePressed(int button) {
 	if (button == 0) {
-		clicking = true;
+		left_clicking = true;
+	}
+	if (button == 1) {
+		right_clicking = true;
 	}
 }
 
 void RadarVisualizer::mouseReleased(int button) {
 	if (button == 0) {
-		clicking = false;
+		left_clicking = false;
+	}
+	if (button == 1) {
+		right_clicking = false;
 	}
 }
 

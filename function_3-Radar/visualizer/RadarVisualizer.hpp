@@ -22,14 +22,19 @@ private:
 	template<std::size_t N>
 	void draw_polygon(piksel::Graphics &g, const std::array<glm::vec2, N> &points);
 	glm::vec2 radar_to_screen_coord(double lon, double lat) const;
+	glm::vec2 screen_to_radar_coord(const glm::vec2 &coord) const;
+	bool is_obstacle_dangerous(const Object &obj) const;
 	int m_key;
 	std::unique_ptr<Radar> radar;
-	glm::vec2 offset{-195., -468};
+	glm::vec2 offset{-195. - Object::DIST_LAT_MIN_OBJECTS, -468 - Object::DIST_LONG_MIN};
 	glm::vec2 mouse_position{0, 0};
 	float zoom = 18;
-	bool clicking = false;
+	bool right_clicking = false;
+	bool left_clicking = false;
 	bool display_distance = true;
 	bool display_speed = true;
+	bool display_warning = true;
+	glm::vec2 warning_region_size{2, 2};
 };
 
 
