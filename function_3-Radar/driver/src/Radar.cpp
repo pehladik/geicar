@@ -26,7 +26,8 @@ void Radar::process() {
 			if (!msg)
 				break;
 //			std::cout << *msg;
-			if (dynamic_cast<ObjectListStatus *>(msg.get())) {
+			if (dynamic_cast<ObjectListStatus *>(msg.get()) ||
+			    dynamic_cast<ClusterListStatus *>(msg.get())) {
 				generate_measure();
 			}
 			if (auto config = dynamic_cast<message::RadarState *>(msg.get())) {
