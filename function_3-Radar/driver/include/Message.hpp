@@ -5,6 +5,7 @@
 #include <memory>
 #include <ostream>
 #include <variant>
+#include <chrono>
 
 namespace message {
 
@@ -16,7 +17,8 @@ namespace message {
 	};
 
 	struct MessageIn : public MessageBase {
-		static std::unique_ptr<MessageIn> parse(std::uint32_t id, const std::bitset<64> &payload);
+		uint32_t timestamp;
+		static std::unique_ptr<MessageIn> parse(uint32_t timestamp, std::uint32_t id, const std::bitset<64> &payload);
 	};
 
 	struct MessageOut : public MessageBase {

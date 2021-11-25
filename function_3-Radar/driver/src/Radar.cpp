@@ -41,13 +41,13 @@ void Radar::process() {
 	}
 }
 
-std::unique_ptr<MessageIn> Radar::parse_message(uint32_t id, std::uint8_t data[8]) {
+std::unique_ptr<MessageIn> Radar::parse_message(uint32_t timestamp, uint32_t id, std::uint8_t data[8]) {
 	std::bitset<64> payload_reversed = 0;
 	for (int i = 0; i < 8; ++i) {
 		std::uint64_t reversed_payload_byte = reverse_byte(data[i]);
 		payload_reversed |= reversed_payload_byte << (i * 8);
 	}
-	return MessageIn::parse(id, payload_reversed);
+	return MessageIn::parse(timestamp, id, payload_reversed);
 }
 
 void Radar::generate_measure() {
@@ -126,9 +126,9 @@ std::unique_ptr<MessageIn> RealRadar::receive() {
 	if (received == 0)
 		return nullptr;
 	if (dump_file.has_value()) {
-		write_to_dump_file(msg.ident, msg.payload);
+		write_to_dump_file(msg.timestamp, msg.ident, msg.payload);
 	}
-	return parse_message(msg.ident, msg.payload);
+	return parse_message(msg.timestamp, msg.ident, msg.payload);
 }
 
 std::string RealRadar::get_last_error() {
@@ -188,14 +188,12 @@ void RealRadar::send(std::unique_ptr<message::MessageOut> msg) {
 	simply_send(&can_msg);
 }
 
-void Radar::write_to_dump_file(uint32_t id, const std::uint8_t data[8]) {
+void Radar::write_to_dump_file(uint32_t timestamp, uint32_t id, const std::uint8_t data[8]) {
 	using namespace std::chrono;
 	if (!dump_file.has_value()) {
 		return;
 	}
-	auto now = high_resolution_clock::now();
-	auto ms = duration_cast<milliseconds>(now - time_started).count();
-	*dump_file << ms << " " << id << " ";
+	*dump_file << timestamp << " " << id << " ";
 	for (int i = 0; i < 8; ++i) {
 		*dump_file << static_cast<unsigned>(data[i]) << " ";
 	}
@@ -227,17 +225,17 @@ std::unique_ptr<MessageIn> SimulatedRadar::receive() {
 	using namespace std::chrono;
 	std::uint8_t data[8];
 	std::uint32_t id;
-	long message_ms;
+	long timestamp;
 	auto prev_position = file.tellg();
 
-	file >> message_ms;
+	file >> timestamp;
 	if (!file.good())
 		return nullptr;
 
 	auto now = high_resolution_clock::now();
 	auto ms = duration_cast<milliseconds>(now - time_started).count();
 
-	if (message_ms > ms) {
+	if (timestamp > ms) {
 		file.seekg(prev_position);
 		return nullptr;
 	} else {
@@ -249,9 +247,9 @@ std::unique_ptr<MessageIn> SimulatedRadar::receive() {
 		}
 		if (file.good()) {
 			if (dump_file.has_value()) {
-				write_to_dump_file(id, data);
+				write_to_dump_file(timestamp, id, data);
 			}
-			return Radar::parse_message(id, data);
+			return Radar::parse_message(timestamp, id, data);
 		} else {
 			return nullptr;
 		}

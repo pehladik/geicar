@@ -6,28 +6,43 @@
 
 namespace message {
 
-	std::unique_ptr<MessageIn> MessageIn::parse(std::uint32_t id, const std::bitset<64> &payload) {
+	std::unique_ptr<MessageIn> MessageIn::parse(uint32_t timestamp, std::uint32_t id, const std::bitset<64> &payload) {
+		std::unique_ptr<MessageIn> msg;
 		switch (id) {
 			case 0x60A:
-				return std::make_unique<ObjectListStatus>(payload);
+				msg = std::make_unique<ObjectListStatus>(payload);
+				break;
 			case 0x60B:
-				return std::make_unique<ObjectGeneralInfo>(payload);
+				msg = std::make_unique<ObjectGeneralInfo>(payload);
+				break;
 			case 0x60C:
-				return std::make_unique<ObjectQualityInfo>(payload);
+				msg = std::make_unique<ObjectQualityInfo>(payload);
+				break;
 			case 0x60D:
-				return std::make_unique<ObjectExtInfo>(payload);
+				msg = std::make_unique<ObjectExtInfo>(payload);
+				break;
 			case 0x600:
-				return std::make_unique<ClusterListStatus>(payload);
+				msg = std::make_unique<ClusterListStatus>(payload);
+				break;
 			case 0x701:
-				return std::make_unique<ClusterGeneralInfo>(payload);
+				msg = std::make_unique<ClusterGeneralInfo>(payload);
+				break;
 			case 0x702:
-				return std::make_unique<ClusterQualityInfo>(payload);
+				msg = std::make_unique<ClusterQualityInfo>(payload);
+				break;
 			case 0x201:
-				return std::make_unique<RadarState>(payload);
+				msg = std::make_unique<RadarState>(payload);
+				break;
 			case 0x203:
-				return std::make_unique<FilterStateHeader>(payload);
+				msg = std::make_unique<FilterStateHeader>(payload);
+				break;
 			case 0x204:
-				return std::make_unique<FilterStateConfig>(payload);
+				msg = std::make_unique<FilterStateConfig>(payload);
+				break;
+		}
+		if (msg != nullptr) {
+			msg->timestamp = timestamp;
+			return msg;
 		}
 		std::ostringstream ss{};
 		ss << "Unknown message id: 0x" << std::hex << id;

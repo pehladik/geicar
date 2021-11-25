@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-    <name>radar_ros</name>
+    <name>obstacle_detection</name>
     <version>0.0.1</version>
     <description>A packages that publish if an obstacle is detected by the radar</description>
 

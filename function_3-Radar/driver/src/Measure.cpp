@@ -5,7 +5,9 @@ using namespace message;
 
 Measure::Measure(const ClusterListStatus &list_status_msg,
                  const std::array<std::optional<ClusterGeneralInfo>, 256> &general_info_msg,
-                 const std::array<std::optional<ClusterQualityInfo>, 256> &quality_info_msg) {
+                 const std::array<std::optional<ClusterQualityInfo>, 256> &quality_info_msg) :
+		counter(list_status_msg.measCounter.to_ulong()),
+		timestamp{list_status_msg.timestamp} {
 	objects.reserve(std::min(250ul, list_status_msg.nofTargetsFar.to_ulong() + list_status_msg.nofTargetsNear.to_ulong()));
 	for (unsigned i = 0; i < general_info_msg.size(); ++i) {
 		if (general_info_msg[i].has_value()) {
@@ -18,7 +20,8 @@ Measure::Measure(const message::ObjectListStatus &list_status_msg,
                  const std::array<std::optional<ObjectGeneralInfo>, 256> &general_info_msg,
                  const std::array<std::optional<ObjectQualityInfo>, 256> &quality_info_msg,
                  const std::array<std::optional<ObjectExtInfo>, 256> &extended_info_msg) :
-		counter(list_status_msg.measCounter.to_ulong()) {
+		counter(list_status_msg.measCounter.to_ulong()),
+		timestamp{list_status_msg.timestamp} {
 	objects.reserve(std::min(100ul, list_status_msg.nofObjects.to_ulong()));
 	for (unsigned i = 0; i < general_info_msg.size(); ++i) {
 		if (general_info_msg[i].has_value()) {

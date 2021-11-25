@@ -4,6 +4,7 @@
 #include <vector>
 #include <optional>
 #include <ostream>
+#include <chrono>
 #include "Message.hpp"
 
 
@@ -92,6 +93,7 @@ struct Measure {
 	Measure(const message::ClusterListStatus &list_status_msg,
 	        const std::array<std::optional<message::ClusterGeneralInfo>, 256> &general_info_msg,
 	        const std::array<std::optional<message::ClusterQualityInfo>, 256> &quality_info_msg);
+	uint32_t timestamp;
 	unsigned counter;
 	std::vector<Object> objects;
 	friend std::ostream &operator<<(std::ostream &os, const Measure &measure);

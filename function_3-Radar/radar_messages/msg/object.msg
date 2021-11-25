@@ -1,0 +1,6 @@
+uint32 id
+float64 distance_long
+float64 distance_lat
+float64 velocity_long
+float64 velocity_lat
+float64 radar_cross_section

@@ -1,6 +1,8 @@
 #include <ros/ros.h>
-#include <std_msgs/String.h>
+#include "radar_messages/objects.h"
+#include "radar_messages/frame.h"
 #include "Radar.hpp"
+#include "Config.hpp"
 
 void print_usage_and_exit(std::string_view exe_name) {
 	std::ostringstream ss;
@@ -10,12 +12,6 @@ void print_usage_and_exit(std::string_view exe_name) {
 	ss << "   path         : path to the dump file or to the USB converter\n";
 	std::cout << ss.str();
 	std::exit(1);
-}
-
-bool is_obstacle_dangerous(Object obj) {
-	return obj.distance_long < 2 &&
-	       obj.distance_lat < 1 &&
-	       obj.distance_lat > -1;
 }
 
 int main(int argc, char **argv) {
@@ -49,30 +45,37 @@ int main(int argc, char **argv) {
 		radar = std::make_unique<RealRadar>(*path, dump_file_path);
 	}
 
-	ros::init(argc, argv, "real_radar");
+	ros::init(argc, argv, "radar_node");
 
 	ros::NodeHandle n;
 
-	ros::Publisher chatter_pub = n.advertise<std_msgs::String>("obstacle_ahead", 1000);
+	ros::Publisher objects_publisher = n.advertise<radar_messages::frame>("radar_frames", 1000);
 
 	ros::Rate loop_rate(10);
+
+	RadarConfiguration config{};
+	config.outputType = OutputType::OBJECTS;
+	radar->send_config(config);
 
 	while (ros::ok()) {
 		radar->process();
 
 		if (radar->measure.has_value()) {
 			auto &objects = radar->measure->objects;
-			bool danger = std::any_of(objects.begin(), objects.end(), is_obstacle_dangerous);
+			radar_messages::frame frame;
+			frame.time = ros::Time{radar->measure->timestamp / 1000u, 1000 * (radar->measure->timestamp % 1000u)};
 
-			std_msgs::String msg;
+			for (auto &&object: objects) {
+				frame.objects.emplace_back();
+				frame.objects.back().id = object.id;
+				frame.objects.back().distance_long = object.distance_long;
+				frame.objects.back().distance_lat = object.distance_lat;
+				frame.objects.back().velocity_long = object.relative_velocity_long;
+				frame.objects.back().velocity_lat = object.relative_velocity_lat;
+				frame.objects.back().radar_cross_section = object.radar_cross_section;
+			}
 
-			std::stringstream ss;
-			ss << danger;
-			msg.data = ss.str();
-
-			ROS_INFO("Publishing %s", msg.data.c_str());
-
-			chatter_pub.publish(msg);
+			objects_publisher.publish(frame);
 
 			ros::spinOnce();
 		}
@@ -80,7 +83,5 @@ int main(int argc, char **argv) {
 		loop_rate.sleep();
 	}
 
-
 	return 0;
-
 }
