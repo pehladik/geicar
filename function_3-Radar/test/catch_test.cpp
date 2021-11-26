@@ -43,7 +43,7 @@ TEST_CASE("test_parse_message") {
 		                       0b11111111,
 		                       0b11111111};
 
-		auto msg = Radar::parse_message(id, data);
+		auto msg = Radar::parse_message(0, id, data);
 		auto obj_list_status = dynamic_cast<message::ObjectListStatus *>(msg.get());
 		CAPTURE(*msg);
 		REQUIRE(obj_list_status != nullptr);
@@ -53,26 +53,30 @@ TEST_CASE("test_parse_message") {
 	}
 
 	SECTION("Radar config object") {
-		std::uint32_t id = 0x200;
-		std::uint8_t data[] = {0xF8, 0x00, 0x00, 0x00, 0x08, 0x9C, 0x00, 0x00};
-
-		auto msg = Radar::parse_message(id, data);
-		auto radar_config = dynamic_cast<message::RadarConfig *>(msg.get());
-		CAPTURE(*msg);
-		REQUIRE(radar_config != nullptr);
-		REQUIRE(radar_config->outputType_valid.to_ulong() == 1);
-		REQUIRE(radar_config->outputType.to_ulong() == 1);
-	}
-
-	SECTION("Radar config clusters") {
-		std::uint32_t id = 0x200;
-		std::uint8_t data[] = {0xF8, 0x00, 0x00, 0x00, 0x10, 0x9C, 0x00, 0x00};
-
-		auto msg = Radar::parse_message(id, data);
-		auto radar_config = dynamic_cast<message::RadarConfig *>(msg.get());
-		CAPTURE(*msg);
-		REQUIRE(radar_config != nullptr);
-		REQUIRE(radar_config->outputType_valid.to_ulong() == 1);
-		REQUIRE(radar_config->outputType.to_ulong() == 2);
+		RadarConfiguration config;
+		config.outputType = OutputType::OBJECTS;
+		config.storeInNVM = true;
+		config.sortIndex = SortIndex::RANGE;
+		config.sendExtInfo = true;
+		config.sendQuality = true;
+		auto msg = config.to_message();
+		CAPTURE(msg);
+		REQUIRE(msg.outputType_valid.to_ulong() == 1);
+		REQUIRE(msg.outputType.to_ulong() == 1);
+		REQUIRE(msg.storeInNVM_valid.to_ulong() == 1);
+		REQUIRE(msg.storeInNVM.to_ulong() == 1);
+		REQUIRE(msg.sortIndex_valid.to_ulong() == 1);
+		REQUIRE(msg.sortIndex.to_ulong() == 1);
+		REQUIRE(msg.sendExtInfo_valid.to_ulong() == 1);
+		REQUIRE(msg.sendExtInfo.to_ulong() == 1);
+		REQUIRE(msg.sendQuality_valid.to_ulong() == 1);
+		REQUIRE(msg.sendQuality.to_ulong() == 1);
+		REQUIRE(msg.ctrlRelay_valid.to_ulong() == 0);
+		REQUIRE(msg.maxDistance_valid.to_ulong() == 0);
+		REQUIRE(msg.rcsThreshold_valid.to_ulong() == 0);
+		REQUIRE(msg.sensorID_valid.to_ulong() == 0);
+		CAPTURE(msg.to_payload());
+		REQUIRE(msg.get_id() == 0x200);
+		REQUIRE(reverse(msg.to_payload()) == std::bitset<64>{0xF8000000089C0000});
 	}
 }
