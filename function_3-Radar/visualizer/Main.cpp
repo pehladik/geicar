@@ -1,5 +1,6 @@
 #include <iostream>
 #include "RadarVisualizer.hpp"
+#include "Radar.hpp"
 
 void print_usage_and_exit(std::string_view exe_name) {
 	std::ostringstream ss;
@@ -35,6 +36,18 @@ int main(int argc, char **argv) {
 
 	const bool simulate = path->substr(0, 4) != "/dev";
 
-	RadarVisualizer app{*path, simulate, dump_file_path};
+	std::unique_ptr<Radar> radar{};
+	if (simulate) {
+		radar = std::make_unique<SimulatedRadar>(path.value(), dump_file_path);
+	} else {
+		radar = std::make_unique<RealRadar>(path.value(), dump_file_path);
+	}
+
+	auto process = [&radar]() {radar->process();};
+	auto measure_getter = [&radar]() {return radar->measure;};
+	auto config_sender = [&radar](const RadarConfiguration &config) {radar->send_config(config);};
+	auto state_getter = [&radar]() {return radar->state;};
+
+	RadarVisualizer app{process, measure_getter, config_sender, state_getter};
 	app.start();
 }

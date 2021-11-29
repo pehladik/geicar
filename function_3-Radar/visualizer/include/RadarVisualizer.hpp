@@ -2,14 +2,16 @@
 #define GEIFLIX_RADARVISUALIZER_HPP
 
 #include <baseapp.hpp>
-#include <Radar.hpp>
-
+#include <functional>
+#include "Config.hpp"
+#include "Measure.hpp"
 
 class RadarVisualizer : public piksel::BaseApp {
 public:
-	explicit RadarVisualizer(const std::filesystem::path &path,
-	                         bool simulate = false,
-	                         const std::optional<std::filesystem::path> &dump_file_path = std::nullopt);
+	RadarVisualizer(std::function<void()> process,
+	                std::function<std::optional<Measure>()> measure_getter,
+	                std::function<void(const RadarConfiguration &)> config_sender = [](const RadarConfiguration &) {},
+	                std::function<std::optional<RadarState>()> state_getter = [] {return std::nullopt;});
 	void setup();
 	void draw(piksel::Graphics &g);
 	void keyReleased(int key) override;
@@ -19,13 +21,20 @@ public:
 	void mouseReleased(int button) override;
 
 private:
+	std::function<void()> process;
+	std::function<std::optional<Measure>()> get_measure;
+	std::function<void(const RadarConfiguration &)> send_config;
+	std::function<std::optional<RadarState>()> get_state;
+
 	template<std::size_t N>
 	void draw_polygon(piksel::Graphics &g, const std::array<glm::vec2, N> &points);
+
 	glm::vec2 radar_to_screen_coord(double lon, double lat) const;
 	glm::vec2 screen_to_radar_coord(const glm::vec2 &coord) const;
+
 	bool is_obstacle_dangerous(const Object &obj) const;
-	int m_key;
-	std::unique_ptr<Radar> radar;
+
+	int m_key = 0;
 	glm::vec2 offset{-195. - Object::DIST_LAT_MIN_OBJECTS, -468 - Object::DIST_LONG_MIN};
 	glm::vec2 mouse_position{0, 0};
 	float zoom = 18;
@@ -34,7 +43,7 @@ private:
 	bool display_distance = true;
 	bool display_speed = true;
 	bool display_warning = true;
-	glm::vec2 warning_region_size{2, 2};
+	glm::vec2 warning_region_size{5, 2};
 };
 
 

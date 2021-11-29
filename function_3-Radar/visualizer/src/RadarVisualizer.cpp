@@ -1,18 +1,18 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
+#include <iomanip>
 #include "RadarVisualizer.hpp"
 
-RadarVisualizer::RadarVisualizer(const std::filesystem::path &path,
-                                 bool simulate,
-                                 const std::optional<std::filesystem::path> &dump_file_path)
-		: piksel::BaseApp(1920, 1000) {
-	if (simulate) {
-		radar = std::make_unique<SimulatedRadar>(path, dump_file_path);
-	} else {
-		radar = std::make_unique<RealRadar>(path, dump_file_path);
-	}
-}
+RadarVisualizer::RadarVisualizer(std::function<void()> process,
+                                 std::function<std::optional<Measure>()> measure_getter,
+                                 std::function<void(const RadarConfiguration &)> config_sender,
+                                 std::function<std::optional<RadarState>()> state_getter) :
+		piksel::BaseApp(1920, 1000),
+		process{std::move(process)},
+		get_measure{std::move(measure_getter)},
+		get_state{std::move(state_getter)},
+		send_config{std::move(config_sender)} {}
 
 void RadarVisualizer::setup() {}
 
@@ -27,7 +27,7 @@ bool RadarVisualizer::is_obstacle_dangerous(const Object &obj) const {
 }
 
 void RadarVisualizer::draw(piksel::Graphics &g) {
-	radar->process();
+	process();
 
 	const glm::vec4 black{0, 0, 0, 1};
 	const glm::vec4 red{1, 0, 0, 1};
@@ -67,10 +67,11 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 	g.fill(black);
 	g.text("other", 20, 280);
 
-	if (radar->state.has_value()) {
+	auto state = get_state();
+	if (state.has_value()) {
 		g.textSize(11);
 		std::stringstream ss;
-		ss << radar->state.value();
+		ss << state.value();
 		g.text(ss.str(), 20, 2 * height / 3);
 	}
 
@@ -112,9 +113,9 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 	draw_polygon(g, range);
 	g.pop();
 
-	if (radar->measure.has_value()) {
-		auto &measure = radar->measure.value();
-		unsigned nObjects = measure.objects.size();
+	auto measure = get_measure();
+	if (measure.has_value()) {
+		unsigned nObjects = measure->objects.size();
 
 		if (display_warning) {
 			g.push();
@@ -131,7 +132,7 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 			ss << std::setprecision(2) << warning_region_size.x << "*" << warning_region_size.y;
 			g.text(ss.str(), width - 130, height - 40);
 			g.pop();
-			bool danger = std::any_of(measure.objects.begin(), measure.objects.end(),
+			bool danger = std::any_of(measure->objects.begin(), measure->objects.end(),
 			                          [this](const Object &o) {return is_obstacle_dangerous(o);});
 			if (danger) {
 				g.push();
@@ -150,7 +151,7 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 		g.pop();
 
 		for (int i = 0; i < nObjects; i++) {
-			const Object &object = measure.objects[i];
+			const Object &object = measure->objects[i];
 
 			const auto screen_coord = radar_to_screen_coord(object.distance_long, object.distance_lat);
 			const float x = screen_coord.x;
@@ -213,32 +214,33 @@ void RadarVisualizer::keyReleased(int key) {
 	m_key = key;
 	RadarConfiguration config{};
 	std::cout << "key = '" << (char) key << "' => " << key << std::endl;
+	auto state = get_state();
 	if (key == 'O') {
-		if (radar->state.has_value()) {
-			config.outputType = radar->state->outputTypeCfg == OutputType::CLUSTERS ?
+		if (state.has_value()) {
+			config.outputType = state->outputTypeCfg == OutputType::CLUSTERS ?
 			                    OutputType::OBJECTS : OutputType::CLUSTERS;
 		} else {
 			config.outputType = OutputType::OBJECTS;
 		}
 	}
 	if (key == 'P') {
-		if (radar->state.has_value()) {
-			config.radarPower = static_cast<RadarPower>((static_cast<int>(radar->state->radarPowerCfg) + 1) % 4);
+		if (state.has_value()) {
+			config.radarPower = static_cast<RadarPower>((static_cast<int>(state->radarPowerCfg) + 1) % 4);
 		} else {
 			config.radarPower = RadarPower::STANDARD;
 		}
 	}
 	if (key == 'T') {
-		if (radar->state.has_value()) {
-			config.rcsThreshold = radar->state->rcsThreshold == RcsThreshold::STANDARD ?
+		if (state.has_value()) {
+			config.rcsThreshold = state->rcsThreshold == RcsThreshold::STANDARD ?
 			                      RcsThreshold::HIGH_SENSITIVITY : RcsThreshold::STANDARD;
 		} else {
 			config.rcsThreshold = RcsThreshold::STANDARD;
 		}
 	}
 	if (key == 'D') {
-		if (radar->state.has_value()) {
-			config.maxDistance = 196 + ((radar->state->maxDistanceCfg - 196 + 10) % 64);
+		if (state.has_value()) {
+			config.maxDistance = 196 + ((state->maxDistanceCfg - 196 + 10) % 64);
 		} else {
 			config.maxDistance = 196;
 		}
@@ -252,7 +254,7 @@ void RadarVisualizer::keyReleased(int key) {
 	if (key == 'Z') { // 'W' on azerty keyboards
 		display_warning = !display_warning;
 	}
-	radar->send_config(config);
+	send_config(config);
 }
 
 glm::tvec2<float> RadarVisualizer::radar_to_screen_coord(double lon, double lat) const {

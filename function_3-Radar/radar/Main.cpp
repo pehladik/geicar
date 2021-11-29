@@ -1,6 +1,5 @@
 #include <ros/ros.h>
-#include "radar_messages/objects.h"
-#include "radar_messages/frame.h"
+#include "radar_ros_msgs/frame.h"
 #include "Radar.hpp"
 #include "Config.hpp"
 
@@ -49,7 +48,7 @@ int main(int argc, char **argv) {
 
 	ros::NodeHandle n;
 
-	ros::Publisher objects_publisher = n.advertise<radar_messages::frame>("radar_frames", 1000);
+	ros::Publisher objects_publisher = n.advertise<radar_ros_msgs::frame>("radar_frames", 1000);
 
 	ros::Rate loop_rate(10);
 
@@ -62,7 +61,7 @@ int main(int argc, char **argv) {
 
 		if (radar->measure.has_value()) {
 			auto &objects = radar->measure->objects;
-			radar_messages::frame frame;
+			radar_ros_msgs::frame frame;
 			frame.time = ros::Time{radar->measure->timestamp / 1000u, 1000 * (radar->measure->timestamp % 1000u)};
 
 			for (auto &&object: objects) {

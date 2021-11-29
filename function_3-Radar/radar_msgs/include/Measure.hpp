@@ -45,6 +45,7 @@ struct CollisionDetectionWarning {
 };
 
 struct Object {
+	Object() = default;
 	Object(const message::ObjectGeneralInfo &general_info_msg,
 	       const std::optional<message::ObjectQualityInfo> &quality_info_msg,
 	       const std::optional<message::ObjectExtInfo> &extended_info_msg);
@@ -65,7 +66,7 @@ struct Object {
 	double distance_lat; // meters
 	double relative_velocity_long; // m/s
 	double relative_velocity_lat; // m/s
-	DynamicProperty dynamic_property;
+	DynamicProperty dynamic_property = DynamicProperty::UNKNOWN;
 	double radar_cross_section; //dBm2
 
 	std::optional<QualityInformation> quality_info;
@@ -86,6 +87,7 @@ struct Object {
 };
 
 struct Measure {
+	Measure() = default;
 	Measure(const message::ObjectListStatus &list_status_msg,
 	        const std::array<std::optional<message::ObjectGeneralInfo>, 256> &general_info_msg,
 	        const std::array<std::optional<message::ObjectQualityInfo>, 256> &quality_info_msg,
@@ -93,9 +95,9 @@ struct Measure {
 	Measure(const message::ClusterListStatus &list_status_msg,
 	        const std::array<std::optional<message::ClusterGeneralInfo>, 256> &general_info_msg,
 	        const std::array<std::optional<message::ClusterQualityInfo>, 256> &quality_info_msg);
-	uint32_t timestamp;
-	unsigned counter;
-	std::vector<Object> objects;
+	uint32_t timestamp = 0; // ms
+	unsigned counter = 0;
+	std::vector<Object> objects{};
 	friend std::ostream &operator<<(std::ostream &os, const Measure &measure);
 };
 
