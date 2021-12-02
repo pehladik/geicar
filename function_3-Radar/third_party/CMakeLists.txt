@@ -1,4 +1,6 @@
-add_subdirectory(piksel)
+if (VISUALIZER)
+    add_subdirectory(piksel)
+endif ()
 
 add_library(catch INTERFACE)
 target_include_directories(catch INTERFACE catch)
