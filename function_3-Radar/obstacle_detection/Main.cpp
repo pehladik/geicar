@@ -1,3 +1,4 @@
+#include <sstream>
 #include <ros/ros.h>
 #include <std_msgs/String.h>
 #include "Radar.hpp"
@@ -15,14 +16,14 @@ void print_usage_and_exit(std::string_view exe_name) {
 
 bool is_obstacle_dangerous(Object obj) {
 	return obj.distance_long < 2 &&
-	       obj.distance_lat < 1 &&
-	       obj.distance_lat > -1;
+			obj.distance_lat < 1 &&
+			obj.distance_lat > -1;
 }
 
 int main(int argc, char **argv) {
 	// Parse arguments
 	std::optional<std::string> path{};
-	std::optional<std::filesystem::path> dump_file_path{};
+	std::optional<std::string> dump_file_path{};
 
 	for (int i = 1; i < argc; ++i) {
 		std::string_view arg = argv[i];

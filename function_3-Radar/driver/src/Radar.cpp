@@ -9,12 +9,12 @@
 
 using namespace message;
 
-Radar::Radar(const std::optional<std::filesystem::path> &dump_file_path) {
+Radar::Radar(const std::optional<std::string> &dump_file_path) {
 	if (dump_file_path.has_value()) {
 		dump_file.emplace();
-		dump_file->open(dump_file_path->string(), std::ios_base::app);
+		dump_file->open(dump_file_path.value(), std::ios_base::app);
 		if (!dump_file->good()) {
-			throw std::runtime_error{"Failed to open the file " + dump_file_path->string()};
+			throw std::runtime_error{"Failed to open the file " + dump_file_path.value()};
 		}
 	}
 }
@@ -101,8 +101,9 @@ void Radar::generate_measure() {
 	message_queue.clear();
 }
 
-RealRadar::RealRadar(const std::string &serial_port,
-                     const std::optional<std::filesystem::path> &dump_file_path) : Radar{dump_file_path} {
+RealRadar::RealRadar(
+		const std::string &serial_port,
+		const std::optional<std::string> &dump_file_path) : Radar{dump_file_path} {
 	init_can(serial_port);
 }
 
@@ -205,11 +206,13 @@ void Radar::send_config(const RadarConfiguration &config) {
 }
 
 
-SimulatedRadar::SimulatedRadar(const std::filesystem::path &path,
-                               const std::optional<std::filesystem::path> &dump_file_path) :
+
+SimulatedRadar::SimulatedRadar(
+		const std::string &path,
+		const std::optional<std::string> &dump_file_path) :
 		file{path}, Radar{dump_file_path} {
 	if (!file.good()) {
-		throw std::runtime_error{"Failed to open the file " + path.string()};
+		throw std::runtime_error{"Failed to open the file " + path};
 	}
 	// Skip waiting before the first message
 	auto prev_position = file.tellg();

@@ -4,16 +4,16 @@
 #include <string>
 #include <memory>
 #include <deque>
-#include <filesystem>
 #include <fstream>
 #include <chrono>
 #include "Message.hpp"
 #include "Measure.hpp"
 #include "Config.hpp"
+#include "CollisionDetection.hpp"
 
 class Radar {
 public:
-	Radar(const std::optional<std::filesystem::path> &dump_file_path);
+	Radar(const std::optional<std::string> &dump_file_path);
 
 	/**
 	 * Read all messages newly received and update the state and measure fields
@@ -57,7 +57,7 @@ public:
 	 *                       with all the messages received during the session
 	 */
 	RealRadar(const std::string &serial_port,
-	          const std::optional<std::filesystem::path> &dump_file_path = std::nullopt);
+	          const std::optional<std::string> &dump_file_path = std::nullopt);
 
 	/**
 	 * @return the error string associated with the last SimplyCAN function call
@@ -79,8 +79,8 @@ public:
 	 * @param dump_file_path An optional path to create a dump file
 	 *                       with all the messages received during the session
 	 */
-	explicit SimulatedRadar(const std::filesystem::path &path,
-	                        const std::optional<std::filesystem::path> &dump_file_path = std::nullopt);
+	explicit SimulatedRadar(const std::string &path,
+	                        const std::optional<std::string> &dump_file_path = std::nullopt);
 
 	virtual ~SimulatedRadar() = default;
 

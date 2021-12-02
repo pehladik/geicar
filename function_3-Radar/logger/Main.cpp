@@ -1,8 +1,8 @@
 #include <iostream>
 #include <optional>
 #include <thread>
-#include <filesystem>
 #include <Radar.hpp>
+#include <sstream>
 
 using namespace std::chrono_literals;
 
@@ -19,7 +19,7 @@ void print_usage_and_exit(std::string_view exe_name) {
 int main(int argc, char **argv) {
 	// Parse arguments
 	std::optional<std::string> path{};
-	std::optional<std::filesystem::path> dump_file_path{};
+	std::optional<std::string> dump_file_path{};
 
 	for (int i = 1; i < argc; ++i) {
 		std::string_view arg = argv[i];
@@ -47,16 +47,24 @@ int main(int argc, char **argv) {
 		radar = std::make_unique<RealRadar>(*path, dump_file_path);
 	}
 
-	while (true) {
+	std::ofstream out{"obstacles.txt"};
+
+	for (int i = 0; i < 100; ++i) {
 		radar->process();
 
 		if (radar->state.has_value()) {
-			std::cout << radar->state.value() << '\n';
+//			std::cout << radar->state.value() << '\n';
 		}
 		if (radar->measure.has_value()) {
-			std::cout << radar->measure.value() << '\n';
+//			std::cout << radar->measure.value() << '\n';
+			for (auto &&object: radar->measure->objects) {
+				out << object.radar_cross_section << ","
+				    << object.distance_long << "," << object.distance_lat << "," <<
+				    object.relative_velocity_long << "," << object.relative_velocity_lat << " ";
+			}
+			out << '\n';
 		}
 
-		std::this_thread::sleep_for(500ms);
+		std::this_thread::sleep_for(100ms);
 	}
 }
