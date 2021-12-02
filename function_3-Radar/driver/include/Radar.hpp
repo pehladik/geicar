@@ -9,7 +9,6 @@
 #include "Message.hpp"
 #include "Measure.hpp"
 #include "Config.hpp"
-#include "CollisionDetection.hpp"
 
 class Radar {
 public:

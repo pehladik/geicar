@@ -16,7 +16,7 @@ void print_usage_and_exit(std::string_view exe_name) {
 int main(int argc, char **argv) {
 	// Parse arguments
 	std::optional<std::string> path{};
-	std::optional<std::filesystem::path> dump_file_path{};
+	std::optional<std::string> dump_file_path{};
 
 	for (int i = 1; i < argc; ++i) {
 		std::string_view arg = argv[i];
