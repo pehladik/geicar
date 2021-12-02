@@ -30,8 +30,9 @@ The projects are (or were) surpervised by:
 - Linux or WSL
 - Any C++ compiler (`sudo apt install build-essential`)
 - CMake
+- Ros 1 (tested on ROS Noetic)
 
-### Visualizer
+### Ros node
 
 #### Building
 
@@ -41,9 +42,76 @@ Clone the project and cd into it.
 mkdir build
 cd build
 cmake ..
-cmake --build . --target radar_visualizer
-function_3-Radar/radar_visualizer <path/to/dump_file_or_simplyCAN_device>
+cmake --build . --target radar_node
 ```
+
+#### Running
+
+In a separate terminal, run the ROS server:
+
+```bash
+roscore
+```
+
+Then, launch the program that sends the radar messages to the ROS topic `radar_frames`:
+
+```bash
+# in the build folder
+source devel/setup.bash
+devel/lib/radar/radar_node ../function_3-Radar/radar_dump.txt
+```
+
+(You can change the argument to be another dump file or even the path to the actual simplyCAN converter to use the real radar)
+
+Add the `-dump <path>` option to dump the raw radar messages to a file in order to replay them.
+
+You can now echo the messages published to the topic with this command:
+
+```bash
+# in the build folder
+source devel/setup.bash
+rostopic echo radar_frames
+```
+
+### Visualizer (using ROS)
+
+#### Building
+
+Clone the project and cd into it.
+
+```bash
+mkdir build
+cd build
+cmake -DVISUALIZER=True ..
+cmake --build . --target ros_visualizer_node
+cmake --build . --target radar_node
+```
+
+#### Running
+
+In a separate terminal, run the ROS server:
+
+```bash
+roscore
+```
+
+Launch the visualizer:
+
+```bash
+# in the build folder
+source devel/setup.bash
+devel/lib/ros_visualizer/ros_visualizer_node
+```
+
+Then, in another terminal, launch `radar_node` (the program that publishes the radar messages):
+
+```bash
+# in the build folder
+source devel/setup.bash
+devel/lib/radar/radar_node ../function_3-Radar/radar_dump.txt
+```
+
+(You can change the argument to be another dump file or even the path to the actual simplyCAN converter to use the real radar)
 
 Add the `-dump <path>` option to dump the raw radar messages to a file in order to replay them.
 
@@ -56,7 +124,7 @@ You can toggle displaying the speed vectors, distances and warning regions with 
 You can change the configuration of the radar with the keys D (max distance), O (objects or clusters), P (power) and R (RCS
 threshold).
 
-### Ros node
+### Visualizer (not using ROS)
 
 #### Building
 
@@ -65,14 +133,20 @@ Clone the project and cd into it.
 ```bash
 mkdir build
 cd build
-cmake ..
-cmake --build . --target radar_ros_node
-
-# In separate terminals:
-roscore
-roslaunch rosbridge_server rosbridge_websocket.launch
-devel/lib/radar_ros/radar_ros_node <path/to/dump_file_or_simplyCAN_device>
+cmake -DVISUALIZER=True ..
+cmake --build . --target radar_visualizer
+function_3-Radar/radar_visualizer ../function_3-Radar/radar_dump.txt
 ```
+
+(You can change the argument to be another dump file or even the path to the actual simplyCAN converter to use the real radar)
 
 Add the `-dump <path>` option to dump the raw radar messages to a file in order to replay them.
 
+#### Commands
+
+You can pan and zoom using the mouse (left click and scroll).
+
+You can toggle displaying the speed vectors, distances and warning regions with the keys S, M and W respectively.
+
+You can change the configuration of the radar with the keys D (max distance), O (objects or clusters), P (power) and R (RCS
+threshold).
