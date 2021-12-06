@@ -46,8 +46,8 @@ class Fenetre(QWidget):
         #self.setLayout(grid)
         #self.resize(1080,860)
         self.coeff=1
-        self.max_row=int(50)
-        self.max_col=int(50)#En gros c'est le nombre de metre qu'on veut mais il faut le multiplier par le coeff du coups
+        self.max_row=int(40)
+        self.max_col=int(40)#En gros c'est le nombre de metre qu'on veut mais il faut le multiplier par le coeff du coups
         self.positions = [(i, j) for i in range(self.max_row) for j in range(self.max_col)]
         for position in self.positions:
             button = NewBouton()
@@ -142,7 +142,9 @@ class Fenetre(QWidget):
         with open("obstacles_real.txt", "r") as f:
             data=f.read()
         #data=data.replace('\n','')
-        rad=Radar(data,self.max_row,self.max_col,self.coeff)
+        #CHANGER FONCTIONNEMENT
+        rad=Radar(data,self.max_row,self.max_col,self.coeff,option="ROS")
+        rad.update()
         self.arr2d=rad.get_arr2d()
         #rad.print_arr_2d()
 
@@ -168,19 +170,18 @@ class Fenetre(QWidget):
         #print(path)
         #return list of tupple (0,1)
         if(path!=None):
-            path=detect_patern(path)
+            #Si on veut pas le path smoothing qui est globalement pas fou je trouve
+            #path=detect_patern(path)
             for position in path:
                 if position==None:
                     break
                 row=position[0]
                 col=position[1]
+                #ne pas colorier les point d'arrivé et de start
+                if((row==self.end.row and col==self.end.col) or (row==self.start.row and col==self.start.col)):
+                    continue
                 btn=self.grid.itemAtPosition(*position).widget()
                 btn.setStyleSheet("background-color : blue;border : 2px solid black;")
-    
-        btn=self.grid.itemAtPosition(self.end.row,self.end.col).widget()
-        btn.setStyleSheet("background-color DodgerBlue: ;border : 2px solid black;")
-        btn=self.grid.itemAtPosition(self.start.row,self.start.col).widget()
-        btn.setStyleSheet("background-color crimson: ;border : 2px solid black;")
     
     def rand_obs(self):
         self.clean_btn()
