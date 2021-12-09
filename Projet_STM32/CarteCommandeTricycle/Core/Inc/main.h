@@ -98,8 +98,6 @@ void Error_Handler(void);
 #define STOP_EXTI_IRQn EXTI2_IRQn
 #define FREIN_Pin GPIO_PIN_11
 #define FREIN_GPIO_Port GPIOB
-#define REMOTE_GPIO_Port GPIOC
-#define Remote_Pin	GPIO_PIN_7
 #define FREIN_EXTI_IRQn EXTI15_10_IRQn
 #define Fin_de_course_out_Pin GPIO_PIN_12
 #define Fin_de_course_out_GPIO_Port GPIOB
@@ -107,6 +105,9 @@ void Error_Handler(void);
 #define Fin_de_course_in_GPIO_Port GPIOB
 #define PWM_FREIN_Pin GPIO_PIN_6
 #define PWM_FREIN_GPIO_Port GPIOC
+#define Remote_Pin GPIO_PIN_7
+#define Remote_GPIO_Port GPIOC
+#define Remote_EXTI_IRQn EXTI9_5_IRQn
 #define In_opt_Pin GPIO_PIN_8
 #define In_opt_GPIO_Port GPIOC
 #define Direct_FREIN_Pin GPIO_PIN_9
