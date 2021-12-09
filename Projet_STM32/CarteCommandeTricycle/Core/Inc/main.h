@@ -99,7 +99,7 @@ void Error_Handler(void);
 #define FREIN_Pin GPIO_PIN_11
 #define FREIN_GPIO_Port GPIOB
 #define REMOTE_GPIO_Port GPIOC
-#define Remote_Pin GPIO_PIN_7
+#define Remote_Pin	GPIO_PIN_7
 #define FREIN_EXTI_IRQn EXTI15_10_IRQn
 #define Fin_de_course_out_Pin GPIO_PIN_12
 #define Fin_de_course_out_GPIO_Port GPIOB
@@ -124,8 +124,6 @@ void Error_Handler(void);
 #define SWO_Pin GPIO_PIN_3
 #define SWO_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
-
-
 
 /* USER CODE END Private defines */
 
