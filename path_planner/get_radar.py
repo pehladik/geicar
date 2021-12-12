@@ -1,10 +1,19 @@
 #%%
 import numpy as np
 from algo import Node
-import roslibpy
+import platform
 import time
-import roslibpy
-#Data de la forme pos=((50,400),(300,400),(200,300),(5,10),(9,20)) taille=10,50,68,61,20,40 
+plateforme=0
+if(platform.system()=="Windows"):
+    import roslibpy
+    plateforme=1
+if(platform.system()=="Linux"):
+    import rospy
+    from radar_ros_msgs.msg import frame
+    plateforme=2
+ 
+
+
 
 #Permet de capée la valeur au supérieur et de retourner un int et non un float
 #cap_val(-1.5)=-2
@@ -31,10 +40,10 @@ class Radar:
         self.positions = [(i, j) for i in range(self.max_row) for j in range(self.max_col)]
         self.arr2d=np.ones((self.max_row,self.max_col),dtype=object)
         self.op=option
+        self.coeff=coeff
         if(self.op=="TXT"):
             ######A CHANGER SI ON VEUT ADAPTER A ROS##########################
             data=data.split(" ")
-            self.coeff=coeff
             for obj in data:
                 try:
                     elts=[float(x) for x in obj.split(",")]
@@ -49,23 +58,22 @@ class Radar:
                         raise Exception("Prob Radar ligne 32")
             ###################################################################
         else:
-            client = roslibpy.Ros(host='localhost', port=9090)
-            
-            client.run()
-            self.listen=Listener(client,1)
+            if(plateforme==1):
+                client = roslibpy.Ros(host='localhost', port=9090)
+                client.run()
+                self.listen=Listener(client,self.coeff,plateforme)
+            elif(plateforme==2):
+                self.listen=Listener(0,self.coeff,plateforme)
             
 
 
     def update(self):
         if(self.op=="ROS"):
-            self.listen.listener_sub()
-            time.sleep(0.1)
+            self.listen.update()
+            time.sleep(0.2)
             self.pos_obs=self.listen.pos_obs
             self.taille_obs=self.listen.taille_obs
             self.vec_vit_obs=self.listen.vec_vit_obs
-            print(self.pos_obs)
-            print(self.taille_obs)
-            print(self.vec_vit_obs)
         elif(self.op=="TXT"):
             #Actuellement on ne fait rien
             pass
@@ -160,62 +168,60 @@ class Radar:
         return(self.arr2d)
 
 
-
-class Talker:
-    def __init__(self,client):
-        self.talker = roslibpy.Topic(client, '/lgsvl_cmd', 'lgsvl_msgs/VehicleControlData')
-        self.seq=0
-
-    def talker_pub(self,acceleration_pct,braking_pct,target_wheel_angle,target_wheel_angular_rate,target_gear):
-        self.seq=self.seq+1
-        self.talker.publish(
-            roslibpy.Message(
-            {"header": roslibpy.Header(stamp=roslibpy.Time.now(), frame_id='',seq=self.seq),
-            'acceleration_pct': acceleration_pct,
-            'braking_pct': braking_pct,
-            'target_wheel_angle': target_wheel_angle,
-            'target_wheel_angular_rate': target_wheel_angular_rate,
-            'target_gear': target_gear
-            }))
-
 class Listener:
-    def __init__(self,client,coeff):
-        self.coeff=coeff
-        self.listener = roslibpy.Topic(client, '/radar_frames', 'radar_ros_msgs/frame')
+    def __init__(self,client,coeff,plateforme):
         self.pos_obs=list()
         self.taille_obs=list()
         self.vec_vit_obs=list()
+        self.coeff=coeff
+        self.plateforme=plateforme
+        if(plateforme==1):
+            self.listener = roslibpy.Topic(client, '/radar_frames', 'radar_ros_msgs/frame')
+        elif(plateforme==2):
+            rospy.init_node('listener', anonymous=True)
 
     def receive_message(self,msg):
         self.pos_obs=list()
         self.taille_obs=list()
         self.vec_vit_obs=list()
-        for obj in msg['objects']:
-            x=obj['distance_long']
-            y=obj['distance_lat']
-            vx=obj['velocity_long']
-            vy=obj['velocity_lat']
-            taille=obj['radar_cross_section']
-            self.pos_obs.append((x*self.coeff,y*self.coeff))
-            self.taille_obs.append(taille*self.coeff)
-            self.vec_vit_obs.append((vx*self.coeff,vy*self.coeff))
+        if(self.plateforme==1):
+            for obj in msg['objects']:
+                x=obj['distance_long']
+                y=obj['distance_lat']
+                vx=obj['velocity_long']
+                vy=obj['velocity_lat']
+                taille=obj['radar_cross_section']
+                self.pos_obs.append((x*self.coeff,y*self.coeff))
+                self.taille_obs.append(taille*self.coeff)
+                self.vec_vit_obs.append((vx*self.coeff,vy*self.coeff))
+        elif(self.plateforme==2):
+            for obj in msg.objects:
+                x=obj.distance_long
+                y=obj.distance_lat
+                vx=obj.velocity_long
+                vy=obj.velocity_lat
+                taille=obj.radar_cross_section
+                self.pos_obs.append((x*self.coeff,y*self.coeff))
+                self.taille_obs.append(taille*self.coeff)
+                self.vec_vit_obs.append((vx*self.coeff,vy*self.coeff))
 
-
-    def listener_sub(self):
-        #self.listener.subscribe(lambda message: print('Heard talking: ' + message['data']))
-        self.listener.subscribe(self.receive_message)
-
+    def update(self):
+        if(plateforme==1):
+            self.listener.subscribe(self.receive_message)
+        elif(plateforme==2):
+            msg=rospy.wait_for_message('radar_frames',frame)
+            self.receive_message(msg)
 
 if __name__=="__main__":
     print('Start')
     client = roslibpy.Ros(host='localhost', port=9090)
     client.run()
-    talk=Talker(client)
+    #talk=Talker(client)
     print("PASS")
-    listen=Listener(client,1)
-    while(1):
-        listen.listener_sub()
-        time.sleep(5)
+    #listen=Listener(client,1)
+    #while(1):
+        #listen.listener_sub()
+        #time.sleep(5)
         
 
 
