@@ -141,6 +141,23 @@ int main(void)
   MX_CAN1_Init();
   /* USER CODE BEGIN 2 */
   Demarrage();
+
+  CAN_TxHeaderTypeDef TxHeader;
+  uint8_t TxData[8];
+  uint32_t TxMailbox;
+  TxHeader.IDE = CAN_ID_STD;
+  TxHeader.StdId = 0x446;
+  TxHeader.RTR = CAN_RTR_DATA;
+  TxHeader.DLC = 2;
+
+  TxData[0] = 50;
+  TxData[1] = 0xAA;
+
+  if (HAL_CAN_AddTxMessage(&hcan1, &TxHeader, TxData, &TxMailbox) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -281,11 +298,11 @@ static void MX_CAN1_Init(void)
 
   /* USER CODE END CAN1_Init 1 */
   hcan1.Instance = CAN1;
-  hcan1.Init.Prescaler = 12;
+  hcan1.Init.Prescaler = 16;
   hcan1.Init.Mode = CAN_MODE_NORMAL;
   hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
-  hcan1.Init.TimeSeg1 = CAN_BS1_13TQ;
-  hcan1.Init.TimeSeg2 = CAN_BS2_2TQ;
+  hcan1.Init.TimeSeg1 = CAN_BS1_2TQ;
+  hcan1.Init.TimeSeg2 = CAN_BS2_3TQ;
   hcan1.Init.TimeTriggeredMode = DISABLE;
   hcan1.Init.AutoBusOff = DISABLE;
   hcan1.Init.AutoWakeUp = DISABLE;
@@ -297,7 +314,10 @@ static void MX_CAN1_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN CAN1_Init 2 */
-
+  if (HAL_CAN_Start(&hcan1) != HAL_OK)
+  {
+    Error_Handler();
+  }
   /* USER CODE END CAN1_Init 2 */
 
 }
