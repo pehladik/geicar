@@ -162,12 +162,12 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-    /* USER CODE END WHILE */
+  while(1) {
 
-    /* USER CODE BEGIN 3 */
   }
+  /* USER CODE END WHILE */
+
+  /* USER CODE BEGIN 3 */
   /* USER CODE END 3 */
 }
 
@@ -314,10 +314,31 @@ static void MX_CAN1_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN CAN1_Init 2 */
-  if (HAL_CAN_Start(&hcan1) != HAL_OK)
-  {
+  if (HAL_CAN_Start(&hcan1) != HAL_OK) {
     Error_Handler();
   }
+
+  CAN_FilterTypeDef canfilterconfig;
+  canfilterconfig.FilterActivation = CAN_FILTER_ENABLE;
+  canfilterconfig.FilterBank = 0;
+  canfilterconfig.FilterFIFOAssignment = CAN_FILTER_FIFO0;
+  canfilterconfig.FilterMode = CAN_FILTERMODE_IDMASK;
+  canfilterconfig.FilterScale = CAN_FILTERSCALE_16BIT;
+  canfilterconfig.FilterIdHigh = 0;
+  canfilterconfig.FilterIdLow = 0;
+  canfilterconfig.FilterMaskIdHigh = 0;
+  canfilterconfig.FilterMaskIdLow = 0;
+  canfilterconfig.SlaveStartFilterBank = 20;
+
+  if (HAL_CAN_ConfigFilter(&hcan1, &canfilterconfig) != HAL_OK) {
+    Error_Handler();
+  }
+
+  if (HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING) !=
+      HAL_OK) {
+    Error_Handler();
+  }
+
   /* USER CODE END CAN1_Init 2 */
 
 }
@@ -874,6 +895,35 @@ void Moteur_on(void){
 void Moteur_off(void){
 	HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1,DAC_ALIGN_12B_R, 0x000);// PA4 vitesse nulle 0x000000 à 0xFFFFFF / 0 à 3.3V
 }
+
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
+  CAN_RxHeaderTypeDef header;
+  uint8_t data[8];
+  if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &header, data) != HAL_OK) {
+    Error_Handler();
+  }
+
+  if (header.StdId == 1) {
+    GPIO_PinState state = data[0] == 1 ? GPIO_PIN_SET : GPIO_PIN_RESET;
+    HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, state);
+
+    CAN_TxHeaderTypeDef txHeader;
+    uint8_t txData[8];
+    uint32_t txMailbox;
+    txHeader.IDE = CAN_ID_STD;
+    txHeader.StdId = 0x2;
+    txHeader.RTR = CAN_RTR_DATA;
+    txHeader.DLC = 1;
+
+    txData[0] = data[0];
+
+    if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, txData, &txMailbox) != HAL_OK)
+    {
+      Error_Handler();
+    }
+  }
+}
+
 /* USER CODE END 4 */
 
 /**
