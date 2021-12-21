@@ -1,0 +1,91 @@
+#include "dashboard.h"
+#include "main.h"
+#include "brakes.h"
+#include "motor.h"
+#include "steering.h"
+
+/// delay de 20 ms fixe la duree du pas (multiple de 20)
+#define delay_volant 20
+
+void stop_button_callback() {
+	uint32_t delay_ShutDown = 0;
+	while (!HAL_GPIO_ReadPin(STOP_GPIO_Port, STOP_Pin)) { // touche STOP maintenue enfoncée pour Shut down alimentation
+		delay_ShutDown++;
+		if (delay_ShutDown > 5000000) { //
+			/* mise OFF de l'alimentation tricycle*/
+			HAL_GPIO_WritePin(Out_MAINTIEN_GPIO_Port, Out_MAINTIEN_Pin, GPIO_PIN_RESET); //PC4
+			// arret alim
+		}
+	}
+}
+
+void brakes_button_callback() {
+	if (HAL_GPIO_ReadPin(FREIN_GPIO_Port, FREIN_Pin)) {
+		// levier frein off
+		Freinage_off();
+	} else {
+		// levier frein on
+		Freinage_on();
+	}
+}
+
+void remote_button_callback() {
+	if (HAL_GPIO_ReadPin(Remote_GPIO_Port, Remote_Pin)) {
+		ARRET_URGENCE();
+	} else {
+		Moteur_on();
+	}
+}
+
+void left_button_callback() {
+	uint32_t delay_multiplier = 5; // accélération automatique appui touche, 5 vitesse lente et à 1 rapide
+	while (!HAL_GPIO_ReadPin(LEFT_GPIO_Port, LEFT_Pin)) { // touche left enfoncée
+		turn_left();
+		HAL_Delay(delay_multiplier * delay_volant); //5 X 20 ms durée du pas
+		delay_multiplier--;
+		if (delay_multiplier < 1)
+			delay_multiplier = 1;
+	}
+}
+
+void right_button_callback() {
+	uint32_t delay_multiplier = 5; // accélération automatique appui touche, 5 vitesse lente et à 1 rapide
+	while (!HAL_GPIO_ReadPin(RIGHT_GPIO_Port, RIGHT_Pin)) { // touche right enfoncée
+		turn_right();
+		HAL_Delay(delay_multiplier * delay_volant); //5 X 20 ms durée du pas
+		delay_multiplier--;
+		if (delay_multiplier < 1)
+			delay_multiplier = 1;
+	}
+}
+
+/**
+ * interruptions externes des boutons du tableau de bord
+ * PB2  bouton STOP falling edge
+ * PB11 bouton FREIN ON falling edge FREIN OFF rising edge
+ * PC7  bouton LOCAL ON falling edge REMOTE rising edge
+ * PB0 LEFT  falling edge
+ * PB1 RIGHT falling edge
+ */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+	HAL_Delay(100); // temps 100 ms pour anti-rebond
+
+	switch (GPIO_Pin) {
+		case STOP_Pin:      // STOP traitement fait avant appel callback
+			stop_button_callback();
+			break;
+		case FREIN_Pin:     // levier du frein
+			brakes_button_callback();
+			break;
+		case Remote_Pin:    // levier local/remote
+			remote_button_callback();
+			break;
+		case LEFT_Pin:      // left -->  1000 1500 2000
+			left_button_callback();
+			break;
+		case RIGHT_Pin:     // right -->  2000 1500 1000
+			right_button_callback();
+			break;
+	}
+}
+
