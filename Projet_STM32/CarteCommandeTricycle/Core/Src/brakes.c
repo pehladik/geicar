@@ -2,15 +2,11 @@
 #include "main.h"
 #include "motor.h"
 
-/// état 1 si arret urgence pour sortir du process frein on
-uint8_t stat_arret_urg = 0;
+/// état 1 si arret urgence
+bool emergency_stop_state = 0;
 
-/// Gestion verin de freinage
-/// de 0 a 500 pour 0 à 100%
-uint32_t PWM_verin_frein = 0x000;
-
-/// Le frein pas active
-uint32_t b_frein = 0;
+/// Speed of the brake actuator: 0 -> 500 for 0 -> 100%
+#define BRAKES_ACTUATOR_SPEED 250
 
 void brakes_init(void) {
 	// Activation de la commande BREAK par '0'
@@ -23,36 +19,36 @@ void brakes_init(void) {
 	HAL_GPIO_WritePin(Direct_FREIN_GPIO_Port, Direct_FREIN_Pin, GPIO_PIN_SET); // PC9
 }
 
-void ARRET_URGENCE(void) {
-	Moteur_off();
-	Freinage_on();
+void set_emergency_stop(bool state) {
+	emergency_stop_state = state;
+	if (state == true) {
+		motor_set_power(0);
+		brakes_set(true);
+	}
 }
 
-void Freinage_on(void) {
-	// Activation de la commande BREAK par '0'
-	HAL_GPIO_WritePin(Out_BREAK_GPIO_Port, Out_BREAK_Pin, GPIO_PIN_RESET); //PA7
-	// commande vitesse nulle DAC OUT
-	// HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 0x000); // PA4 vitesse nulle 0x000000 à 0xFFFFFF / 0 à 3.3V
-	while (HAL_GPIO_ReadPin(Fin_de_course_in_GPIO_Port, Fin_de_course_in_Pin)) { // PB13, prevoir time out
-		// rentre le vérin pour tirer le cable et freiner
-		TIM3->CCR1 = 250; // 0 à 500 pour 0 à 100 %
-		HAL_GPIO_WritePin(Direct_FREIN_GPIO_Port, Direct_FREIN_Pin, GPIO_PIN_SET); //PC9
+void brakes_set(bool brake) {
+	// Do not allow unbraking when emergency stop is active
+	if (!brake && emergency_stop_state) {
+		return;
 	}
 
-	TIM3->CCR1 = 0; //PWM arrete
+	// Activation du frein moteur (je crois ?) (activation à 0, desactivation a 1)
+	HAL_GPIO_WritePin(Out_BREAK_GPIO_Port, Out_BREAK_Pin, !brake); //PA7
 
-}
+	// Direction du verin de freinage
+	HAL_GPIO_WritePin(Direct_FREIN_GPIO_Port, Direct_FREIN_Pin, brake); //PC9
 
-void Freinage_off(void) {
-	// Desactivation de la commande BREAK par '1'
-	HAL_GPIO_WritePin(Out_BREAK_GPIO_Port, Out_BREAK_Pin, GPIO_PIN_SET); //PA7
-	while ((HAL_GPIO_ReadPin(Fin_de_course_out_GPIO_Port, Fin_de_course_out_Pin)) && !(stat_arret_urg)) { //PB12, prevoir time out
-		// sort le vérin pour relacher le cable et défreiner
-		TIM3->CCR1 = 250; // 0 à 500 pour 0 à 100 %
-		HAL_GPIO_WritePin(Direct_FREIN_GPIO_Port, Direct_FREIN_Pin, GPIO_PIN_RESET);//PC9
+	// Demarrage de la PWM pour le verin
+	TIM3->CCR1 = BRAKES_ACTUATOR_SPEED;
+
+	// Attente du capteur de fin de course TODO: prevoir timeout
+	GPIO_TypeDef *end_travel_sensor_port = brake ? Fin_de_course_in_GPIO_Port : Fin_de_course_out_GPIO_Port;
+	uint16_t end_travel_sensor_pin = brake ? Fin_de_course_in_Pin : Fin_de_course_out_Pin;
+	while (HAL_GPIO_ReadPin(end_travel_sensor_port, end_travel_sensor_pin)) {
+		HAL_Delay(10);
 	}
-	// TODO: a retirer
-	HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 0x0FFF);//3.3V
-	TIM3->CCR1 = 0; // PWM arrete
-	stat_arret_urg = 0; // à voir si utile ! evite un retrait accidentel du frein en cas de stop
+
+	// Arret de la PWM
+	TIM3->CCR1 = 0;
 }

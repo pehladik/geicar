@@ -20,27 +20,25 @@ void stop_button_callback() {
 }
 
 void brakes_button_callback() {
-	if (HAL_GPIO_ReadPin(FREIN_GPIO_Port, FREIN_Pin)) {
-		// levier frein off
-		Freinage_off();
-	} else {
-		// levier frein on
-		Freinage_on();
-	}
+	brakes_set(!HAL_GPIO_ReadPin(FREIN_GPIO_Port, FREIN_Pin));
 }
 
 void remote_button_callback() {
-	if (HAL_GPIO_ReadPin(Remote_GPIO_Port, Remote_Pin)) {
-		ARRET_URGENCE();
-	} else {
-		Moteur_on();
+	const GPIO_PinState pin_state = HAL_GPIO_ReadPin(Remote_GPIO_Port, Remote_Pin);
+	set_emergency_stop(pin_state);
+	if (!pin_state) {
+		motor_set_power(0);
 	}
 }
 
-void left_button_callback() {
+void turn_button_callback(uint16_t btn_pin) {
 	uint32_t delay_multiplier = 5; // accélération automatique appui touche, 5 vitesse lente et à 1 rapide
-	while (!HAL_GPIO_ReadPin(LEFT_GPIO_Port, LEFT_Pin)) { // touche left enfoncée
-		turn_left();
+	while (!HAL_GPIO_ReadPin(LEFT_GPIO_Port, btn_pin)) { // touche left enfoncée
+		if (btn_pin == LEFT_Pin) {
+			turn_left();
+		} else {
+			turn_right();
+		}
 		HAL_Delay(delay_multiplier * delay_volant); //5 X 20 ms durée du pas
 		delay_multiplier--;
 		if (delay_multiplier < 1)
@@ -48,16 +46,6 @@ void left_button_callback() {
 	}
 }
 
-void right_button_callback() {
-	uint32_t delay_multiplier = 5; // accélération automatique appui touche, 5 vitesse lente et à 1 rapide
-	while (!HAL_GPIO_ReadPin(RIGHT_GPIO_Port, RIGHT_Pin)) { // touche right enfoncée
-		turn_right();
-		HAL_Delay(delay_multiplier * delay_volant); //5 X 20 ms durée du pas
-		delay_multiplier--;
-		if (delay_multiplier < 1)
-			delay_multiplier = 1;
-	}
-}
 
 /**
  * interruptions externes des boutons du tableau de bord
@@ -80,11 +68,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 		case Remote_Pin:    // levier local/remote
 			remote_button_callback();
 			break;
-		case LEFT_Pin:      // left -->  1000 1500 2000
-			left_button_callback();
-			break;
-		case RIGHT_Pin:     // right -->  2000 1500 1000
-			right_button_callback();
+		case LEFT_Pin:      // left
+		case RIGHT_Pin:     // right
+			turn_button_callback(GPIO_Pin);
 			break;
 	}
 }

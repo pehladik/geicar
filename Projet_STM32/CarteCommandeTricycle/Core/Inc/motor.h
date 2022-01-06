@@ -5,8 +5,15 @@
 
 extern uint32_t DAC_vitesse;
 
+/**
+ * Initializes the motor's DAC
+ */
 void motor_init(void);
-void Moteur_off(void);
-void Moteur_on(void);
+
+/**
+ * Sets the power of the motor, in order to control its speed
+ * @param power The desired power, between 0 and 1
+ */
+void motor_set_power(float power);
 
 #endif //CARTECOMMANDETRICYCLE_MOTOR_H

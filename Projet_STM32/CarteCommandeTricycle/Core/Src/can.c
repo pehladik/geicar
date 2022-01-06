@@ -1,5 +1,8 @@
 #include "main.h"
 #include "debug.h"
+#include "brakes.h"
+#include "steering.h"
+#include "motor.h"
 
 void CAN_start(CAN_HandleTypeDef *hcan) {
 	if (HAL_CAN_Start(hcan) != HAL_OK) {
@@ -47,11 +50,20 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 		Error_Handler();
 	}
 
-	// test: enable or disable LED 2 when receiving msg with id 1
-	if (header.StdId == 1) {
-		set_debug_led(data[0]);
-		// echo the msg
-		uint8_t txData[] = {data[0]};
-		CAN_send(hcan, 2, txData, 1);
+	switch (header.StdId) {
+		case 0x01:
+			set_emergency_stop(data[0]);
+			break;
+		case 0x02:
+			brakes_set(data[0]);
+			break;
+		case 0x03:
+			motor_set_power(((float) data[0]) / 100);
+		case 0x04:
+			// TODO: handle steering angle
+			if (data[0] < 60)
+				turn_left();
+			else
+				turn_right();
 	}
 }
