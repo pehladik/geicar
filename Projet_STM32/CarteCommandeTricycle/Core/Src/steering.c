@@ -2,31 +2,38 @@
 #include "stm32l4xx_hal.h"
 #include "steering.h"
 
-/// angle volant centré 1500 :
+/// angle volant centré 60°:
 /// [1000 1500 2000] pour [0° 60° 120°]
-uint32_t angle_volant = 1500;
+int angle_volant = 60;
+#define MIN_CCR 1000
+#define MAX_CCR 2000
+
+/// Incrément bouton left et right du volant, en degres
+#define increment_volant 5
 
 void steering_init(void) {
 	// start TIMER 2 PWM servo du volant
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1); // PA15
 	// centrage du volant PWM servo
-	TIM2->CCR1 = angle_volant; // angle volant centré 1500 :  [1000 1500 2000] pour [0° 60° 120°]
+	steering_turn(60);
 }
 
-void turn_left(void) {
-	angle_volant += increment_volant; // 5 * 0.12 = 0.6 °
-	if (angle_volant > 2000) {
-		angle_volant = 2000;
-	}
-	// envoi
-	TIM2->CCR1 = angle_volant;
+void steering_turn_left(void) {
+	steering_turn(angle_volant + increment_volant);
 }
 
-void turn_right(void) {
-	angle_volant -= increment_volant; // 5 * 0.12 = 0.6 °
-	if (angle_volant < 1000) {
-		angle_volant = 1000;
+void steering_turn_right(void) {
+	steering_turn(angle_volant - increment_volant);
+}
+
+void steering_turn(int angle) {
+	if (angle < 0) {
+		angle = 0;
 	}
-	// envoi
-	TIM2->CCR1 = angle_volant;
+	if (angle > 120) {
+		angle = 120;
+	}
+	angle_volant = angle;
+	uint32_t ccr = angle * (MAX_CCR - MIN_CCR) / 120 + MIN_CCR;
+	TIM2->CCR1 = ccr;
 }

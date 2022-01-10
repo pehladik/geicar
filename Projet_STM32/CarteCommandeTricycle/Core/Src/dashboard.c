@@ -26,18 +26,18 @@ void brakes_button_callback() {
 void remote_button_callback() {
 	const GPIO_PinState pin_state = HAL_GPIO_ReadPin(Remote_GPIO_Port, Remote_Pin);
 	set_emergency_stop(pin_state);
-	if (!pin_state) {
-		motor_set_power(0);
-	}
+//	if (!pin_state) {
+//		motor_set_power(0);
+//	}
 }
 
 void turn_button_callback(uint16_t btn_pin) {
 	uint32_t delay_multiplier = 5; // accélération automatique appui touche, 5 vitesse lente et à 1 rapide
 	while (!HAL_GPIO_ReadPin(LEFT_GPIO_Port, btn_pin)) { // touche left enfoncée
 		if (btn_pin == LEFT_Pin) {
-			turn_left();
+			steering_turn_left();
 		} else {
-			turn_right();
+			steering_turn_right();
 		}
 		HAL_Delay(delay_multiplier * delay_volant); //5 X 20 ms durée du pas
 		delay_multiplier--;
