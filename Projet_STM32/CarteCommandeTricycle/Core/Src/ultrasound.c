@@ -1,4 +1,4 @@
-#include "ultrason.h"
+#include "ultrasound.h"
 
 #include <string.h>
 #include <stdio.h>

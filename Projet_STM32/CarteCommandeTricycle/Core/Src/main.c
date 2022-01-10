@@ -55,6 +55,8 @@ TIM_HandleTypeDef htim3;
 
 UART_HandleTypeDef huart2;
 
+
+
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -75,6 +77,15 @@ static void MX_CAN1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+char uartBuf[100];
+
+/*
+ uint8_t icFlag = 0;
+uint8_t captureIdx=0;
+uint32_t edge1Time=0, edge2Time=0;
+
+const float speedOfSound = 0.0343/2;
+ */
 
 /* USER CODE END 0 */
 
@@ -125,6 +136,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+      //Print to UART terminal for debugging
+      //sprintf(uartBuf, "Distance (cm)  = %.1f\r\n", distance);
+      //HAL_UART_Transmit(&huart2, (uint8_t *)uartBuf, strlen(uartBuf), 100);
   }
   /* USER CODE END 3 */
 }
