@@ -73,7 +73,7 @@ static void MX_I2C1_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
-static void MX_CAN1_Init(void);
+//static void MX_CAN1_Init(void);
 static void MX_TIM4_Init(void);
 /* USER CODE BEGIN PFP */
 /* USER CODE END PFP */
@@ -127,7 +127,7 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
-  MX_CAN1_Init();
+  //MX_CAN1_Init();
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
   //Main();

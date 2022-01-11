@@ -50,7 +50,7 @@ float getDistance_TRIG_INPUT()
     };
 
     //4. Estimate distance in cm
-    distance = (numTicks + 0.0f)*2.8*speedOfSound;
+    distance = (numTicks + 0.0f)*3.0*speedOfSound;
     return distance;
 
 }
