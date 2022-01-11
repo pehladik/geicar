@@ -4,6 +4,7 @@
 #include "brakes.h"
 #include "motor.h"
 #include "can.h"
+#include "ultrasound.h"
 
 void init(void) {
 	// mise en maintien ON de l'alimentation tricycle

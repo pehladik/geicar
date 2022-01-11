@@ -1,44 +1,18 @@
 #include "ultrasound.h"
+#include "main.h"
 
 #include <string.h>
 #include <stdio.h>
 
 #define usTIM TIM4
 
-TIM_HandleTypeDef htim4;
+//TIM_HandleTypeDef htim4;
 
 uint8_t icFlag = 0;
 uint8_t captureIdx=0;
 uint32_t edge1Time=0, edge2Time=0;
 
 const float speedOfSound = 0.0343/2;
-
-
-/* USER CODE END 0 */
-
-/**
-  * @brief  The application entry point.
-  * @retval int
-  */
-int main(void)
-{
-    /* USER CODE BEGIN 1 */
-    float distance;
-    while (1)
-    {
-        /* USER CODE END WHILE */
-        /* USER CODE BEGIN 3 */
-
-        distance=getDistance_TRIG_INPUT();
-        //Print to UART terminal for debugging
-        sprintf(uartBuf, "Distance (cm)  = %.1f\r\n", distance);
-        HAL_UART_Transmit(&huart2, (uint8_t *)uartBuf, strlen(uartBuf), 100);
-
-        HAL_Delay(100);
-
-    }
-    /* USER CODE END 3 */
-}
 
 void usDelay(uint32_t uSec)
 {

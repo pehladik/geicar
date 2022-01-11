@@ -103,6 +103,10 @@ void Error_Handler(void);
 #define Fin_de_course_out_GPIO_Port GPIOB
 #define Fin_de_course_in_Pin GPIO_PIN_13
 #define Fin_de_course_in_GPIO_Port GPIOB
+#define ECHO_Pin GPIO_PIN_14
+#define ECHO_GPIO_Port GPIOB
+#define TRIGGER_Pin GPIO_PIN_15
+#define TRIGGER_GPIO_Port GPIOB
 #define PWM_FREIN_Pin GPIO_PIN_6
 #define PWM_FREIN_GPIO_Port GPIOC
 #define Remote_Pin GPIO_PIN_7
