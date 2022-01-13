@@ -1,0 +1,6 @@
+#ifndef CARTECOMMANDETRICYCLE_UART_H
+#define CARTECOMMANDETRICYCLE_UART_H
+
+void uart_print(char *s, ...);
+
+#endif //CARTECOMMANDETRICYCLE_UART_H

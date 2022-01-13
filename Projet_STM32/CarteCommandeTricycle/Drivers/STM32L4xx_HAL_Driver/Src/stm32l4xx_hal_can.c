@@ -226,7 +226,7 @@
 #ifdef HAL_CAN_MODULE_ENABLED
 
 #ifdef HAL_CAN_LEGACY_MODULE_ENABLED
-#error "The CAN driver cannot be used with its legacy, Please enable only one CAN module at once"
+  #error "The CAN driver cannot be used with its legacy, Please enable only one CAN module at once"
 #endif
 
 /* Private typedef -----------------------------------------------------------*/

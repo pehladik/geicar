@@ -3,6 +3,6 @@
 
 #include "stm32l4xx_hal.h"
 
-void Main(void);
+_Noreturn void Main(void);
 
 #endif //CARTECOMMANDETRICYCLE_INIT_H

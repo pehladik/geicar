@@ -2,10 +2,12 @@
 #include "brakes.h"
 #include "steering.h"
 #include "motor.h"
+#include "uart.h"
 
 void CAN_start(CAN_HandleTypeDef *hcan) {
 	if (HAL_CAN_Start(hcan) != HAL_OK) {
-		Error_Handler();
+		uart_print("Failed to start CAN bus\r\n");
+		return;
 	}
 
 	CAN_FilterTypeDef canfilterconfig;
@@ -21,11 +23,13 @@ void CAN_start(CAN_HandleTypeDef *hcan) {
 	canfilterconfig.SlaveStartFilterBank = 20;
 
 	if (HAL_CAN_ConfigFilter(hcan, &canfilterconfig) != HAL_OK) {
-		Error_Handler();
+		uart_print("Failed to configure CAN filter\r\n");
+		return;
 	}
 
 	if (HAL_CAN_ActivateNotification(hcan, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK) {
-		Error_Handler();
+		uart_print("Failed to configure CAN callback\r\n");
+		return;
 	}
 }
 
@@ -38,7 +42,8 @@ void CAN_send(CAN_HandleTypeDef *hcan, uint32_t id, uint8_t *data, uint8_t lengt
 	header.DLC = length;
 
 	if (HAL_CAN_AddTxMessage(hcan, &header, data, &mailbox) != HAL_OK) {
-		Error_Handler();
+		uart_print("Failed to send CAN message\r\n");
+		return;
 	}
 }
 
@@ -46,7 +51,8 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 	CAN_RxHeaderTypeDef header;
 	uint8_t data[8];
 	if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &header, data) != HAL_OK) {
-		Error_Handler();
+		uart_print("Failed to receive CAN message\r\n");
+		return;
 	}
 
 	switch (header.StdId) {
