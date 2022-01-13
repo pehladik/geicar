@@ -26,7 +26,7 @@ _Noreturn void Main(void) {
 	CAN_send(&hcan1, 0xf1, data, 1);
 
 	while (1) {
-		float distance = getDistance_TRIG_INPUT();
+		double distance = ultrasound_get_distance_trig_input();
 		uart_print("Distance = %.1f cm\r\n", distance);
 		HAL_Delay(200);
 	}

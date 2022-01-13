@@ -5,11 +5,12 @@
 
 uint8_t icFlag = 0;
 uint8_t captureIdx = 0;
-uint32_t edge1Time = 0, edge2Time = 0;
+uint32_t edge1Time = 0;
+uint32_t edge2Time = 0;
 
 const double speedOfSound = 0.0343 / 2;
 
-void usDelay(uint32_t uSec) {
+void us_delay(uint32_t uSec) {
 	if (uSec < 2) uSec = 2;
 	usTIM->ARR = uSec - 1;  // sets the value in the auto-reload register
 	usTIM->EGR = 1;         // Re-initialises the timer
@@ -19,16 +20,16 @@ void usDelay(uint32_t uSec) {
 	usTIM->SR &= ~(0x0001);
 }
 
-double getDistance_TRIG_INPUT() {
+double ultrasound_get_distance_trig_input() {
 	double distance;
 	uint32_t numTicks = 0;
 	HAL_GPIO_WritePin(TRIGGER_GPIO_Port, TRIGGER_Pin, GPIO_PIN_RESET);
-	usDelay(3);
+	us_delay(3);
 
 	//*** START Ultrasonic measure routine ***//
 	//1. Output 10 usec TRIGGER
 	HAL_GPIO_WritePin(TRIGGER_GPIO_Port, TRIGGER_Pin, GPIO_PIN_SET);
-	usDelay(10);
+	us_delay(10);
 	HAL_GPIO_WritePin(TRIGGER_GPIO_Port, TRIGGER_Pin, GPIO_PIN_RESET);
 
 	//2. Wait for ECHO pin rising edge
@@ -38,7 +39,7 @@ double getDistance_TRIG_INPUT() {
 	numTicks = 0;
 	while (HAL_GPIO_ReadPin(ECHO_GPIO_Port, ECHO_Pin) == GPIO_PIN_SET) {
 		numTicks++;
-		usDelay(2); //2.8usec
+		us_delay(2); //2.8usec
 	};
 
 	//4. Estimate distance in cm
@@ -47,15 +48,15 @@ double getDistance_TRIG_INPUT() {
 
 }
 
-double getDistance() {
+double ultrasound_get_distance() {
 	double distance;
 	HAL_GPIO_WritePin(TRIGGER_GPIO_Port, TRIGGER_Pin, GPIO_PIN_RESET);
-	usDelay(3);
+	us_delay(3);
 
 	//*** START Ultrasonic measure routine ***//
 	//1. Output 10 usec TRIG
 	HAL_GPIO_WritePin(TRIGGER_GPIO_Port, TRIGGER_Pin, GPIO_PIN_SET);
-	usDelay(10);
+	us_delay(10);
 	HAL_GPIO_WritePin(TRIGGER_GPIO_Port, TRIGGER_Pin, GPIO_PIN_RESET);
 
 	//2. ECHO signal pulse width
