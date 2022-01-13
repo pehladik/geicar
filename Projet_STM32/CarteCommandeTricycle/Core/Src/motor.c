@@ -2,8 +2,8 @@
 #include "main.h"
 
 /// Gestion vitesse :
-/// de 0 a 0xFFFFFF sur 12 bits, DAC OUT PA4 : de 0 a 3.3V
-#define MAX_POWER 0xFFFFFF
+/// de 0 a 0xFFF sur 12 bits, DAC OUT PA4 : de 0 a 3.3V
+#define MAX_POWER 0xFFF
 
 void motor_init(void) {
 	// start  DAC vitesse

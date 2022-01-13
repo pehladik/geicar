@@ -1,5 +1,4 @@
 #include "main.h"
-#include "debug.h"
 #include "brakes.h"
 #include "steering.h"
 #include "motor.h"
@@ -59,11 +58,9 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 			break;
 		case 0x03:
 			motor_set_power(((float) data[0]) / 100);
+			break;
 		case 0x04:
-			// TODO: handle steering angle
-			if (data[0] < 60)
-				turn_left();
-			else
-				turn_right();
+			steering_turn(data[0]);
+			break;
 	}
 }
