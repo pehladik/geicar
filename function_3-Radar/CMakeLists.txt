@@ -1,7 +1,6 @@
 add_subdirectory(util)
 add_subdirectory(radar_msgs)
 add_subdirectory(driver)
-add_subdirectory(logger)
 if (VISUALIZER)
     add_subdirectory(visualizer)
 endif ()

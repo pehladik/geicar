@@ -1,4 +1,4 @@
 <launch>
     <node name="dashboard" pkg="ros_dashboard" type="ros_dashboard.py"/>
-    <node name="stm32_can_receiver" pkg="stm32_can_receiver" type="stm32_can_receiver_node" args="/dev/ttyACM3"/>
+    <node name="stm32_can_receiver" pkg="stm32_can_receiver" type="stm32_can_receiver_node" args="/dev/ttyACM2"/>
 </launch>

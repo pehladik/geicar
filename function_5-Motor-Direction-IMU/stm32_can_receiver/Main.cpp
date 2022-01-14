@@ -39,15 +39,15 @@ int main(int argc, char **argv) {
 
 	if (!simply_open(serial_port)) {
 		ROS_ERROR("Unable to open the CAN serial port: %s", get_last_error().c_str());
-//		return 2;
+		return 2;
 	}
 	if (!simply_initialize_can(500)) {
 		ROS_ERROR("Unable to initialize CAN: %s", get_last_error().c_str());
-//		return 3;
+		return 3;
 	}
 	if (!simply_start_can()) {
 		ROS_ERROR("Unable to start CAN: %s", get_last_error().c_str());
-//		return 4;
+		return 4;
 	}
 
 	ros::Rate loop_rate(10);
@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
 		std::int8_t received;
 		received = simply_receive(&can_msg);
 		if (received == -1) {
-//			ROS_ERROR("Error receiving CAN message: %s", get_last_error().c_str());
+			ROS_ERROR("Error receiving CAN message: %s", get_last_error().c_str());
 		} else if (received != 0) {
 			switch (can_msg.ident) {
 				case 0xf1: {
@@ -66,11 +66,11 @@ int main(int argc, char **argv) {
 					publisher_init.publish(ros_msg);
 					break;
 				}
-				case 0xf3: {
+				case 0xf4: {
 					std_msgs::Float32 ros_msg;
 					uint16_t dist_mm = (can_msg.payload[0] << 8) + can_msg.payload[1];
 					ros_msg.data = float(dist_mm) / 10;
-					publisher_init.publish(ros_msg);
+					publisher_us.publish(ros_msg);
 					break;
 				}
 				default:

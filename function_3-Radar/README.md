@@ -19,7 +19,4 @@ screen.
 
 TODO: Subscribe to the ROS topic to get the messages.
 
-## Logger
-
-The `logger` subdirectory contains the code for an executable that just logs all the messages received by the radar.
 

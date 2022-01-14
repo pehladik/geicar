@@ -40,10 +40,15 @@ int main(int argc, char **argv) {
 	const bool simulate = path->substr(path->size() - 4) == ".txt";
 
 	std::unique_ptr<Radar> radar;
-	if (simulate) {
-		radar = std::make_unique<SimulatedRadar>(*path, dump_file_path);
-	} else {
-		radar = std::make_unique<RealRadar>(*path, dump_file_path);
+	try {
+		if (simulate) {
+			radar = std::make_unique<SimulatedRadar>(*path, dump_file_path);
+		} else {
+			radar = std::make_unique<RealRadar>(*path, dump_file_path);
+		}
+	} catch (const std::runtime_error &err) {
+		ROS_ERROR("%s", err.what());
+		exit(2);
 	}
 
 	ros::NodeHandle n;
