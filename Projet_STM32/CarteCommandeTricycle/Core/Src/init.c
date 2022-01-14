@@ -22,12 +22,16 @@ _Noreturn void Main(void) {
 	init();
 	CAN_start(&hcan1);
 
-	uint8_t data[] = {1};
+	uint8_t data[8] = {1};
 	CAN_send(&hcan1, 0xf1, data, 1);
 
 	while (1) {
 		double distance = ultrasound_get_distance_trig_input();
 		uart_print("Distance = %.1f cm\r\n", distance);
+		uint16_t distance_converted = (uint16_t)(distance * 10);
+		data[0] = (distance_converted >> 8) & 0xff;
+		data[1] = distance_converted & 0xff;
+		CAN_send(&hcan1, 0xf4, data, 2);
 		HAL_Delay(200);
 	}
 }
