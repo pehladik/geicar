@@ -9,11 +9,13 @@ void print_usage_and_exit(std::string_view exe_name) {
 	ss << "-- Options --\n";
 	ss << "   -dump <file> : dump the messages to <file>\n";
 	ss << "   path         : path to the dump file or to the USB converter\n";
-	std::cout << ss.str();
+	ROS_ERROR("%s", ss.str().c_str());
 	std::exit(1);
 }
 
 int main(int argc, char **argv) {
+	ros::init(argc, argv, "radar_node");
+
 	// Parse arguments
 	std::optional<std::string> path{};
 	std::optional<std::string> dump_file_path{};
@@ -43,8 +45,6 @@ int main(int argc, char **argv) {
 	} else {
 		radar = std::make_unique<RealRadar>(*path, dump_file_path);
 	}
-
-	ros::init(argc, argv, "radar_node");
 
 	ros::NodeHandle n;
 

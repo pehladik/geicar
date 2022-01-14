@@ -3,6 +3,7 @@ project(geiflix)
 
 set(CMAKE_CXX_STANDARD 17)
 
+add_subdirectory(third_party)
 add_subdirectory(function_3-Radar)
 
 set(CATKIN_TOPLEVEL_FIND_PACKAGE TRUE)

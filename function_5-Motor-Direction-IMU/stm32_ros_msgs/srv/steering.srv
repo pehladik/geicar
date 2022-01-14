@@ -1,0 +1,7 @@
+#request constants
+int16 CAN_ID=04
+#request fields
+int8 angle
+---
+#response fields
+bool success

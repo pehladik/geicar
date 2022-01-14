@@ -1,0 +1,7 @@
+#request constants
+int16 CAN_ID=03
+#request fields
+int8 power
+---
+#response fields
+bool success

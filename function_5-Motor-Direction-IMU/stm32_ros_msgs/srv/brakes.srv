@@ -1,0 +1,7 @@
+#request constants
+int16 CAN_ID=02
+#request fields
+bool brakes_on
+---
+#response fields
+bool success

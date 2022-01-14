@@ -1,4 +1,3 @@
-add_subdirectory(third_party)
 add_subdirectory(util)
 add_subdirectory(radar_msgs)
 add_subdirectory(driver)
