@@ -1,4 +1,5 @@
 <launch>
     <include file="dashboard.launch"/>
     <include file="radar_reel.launch"/>
+    <node name="emergency_stop" pkg="ros_emergency_stop" type="ros_emergency_stop.py"/>
 </launch>

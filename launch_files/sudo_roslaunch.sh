@@ -1,3 +1,4 @@
 #!/bin/bash
 
-sudo -E bash -c "source $CMAKE_PREFIX_PATH/setup.bash && roslaunch $*"
+prefix=$(echo "$CMAKE_PREFIX_PATH" | awk -F':' '{ print $1}')
+sudo -E bash -c "source $prefix/setup.bash && roslaunch $*"

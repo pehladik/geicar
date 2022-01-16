@@ -9,12 +9,6 @@ from stm32_ros_msgs.srv import *
 
 class RosDashboard(QMainWindow):
     def __init__(self):
-        rospy.init_node('ros_dashboard')
-        rospy.wait_for_service('stm32/emergency_stop')
-        rospy.wait_for_service('stm32/brakes')
-        rospy.wait_for_service('stm32/motor')
-        rospy.wait_for_service('stm32/steering')
-
         self.emergency_stop_srv = rospy.ServiceProxy('stm32/emergency_stop', emergency_stop)
         self.brakes_srv = rospy.ServiceProxy('stm32/brakes', brakes)
         self.motor_srv = rospy.ServiceProxy('stm32/motor', motor)
@@ -62,7 +56,7 @@ class RosDashboard(QMainWindow):
 
         motor_slider = QSlider(QtCore.Qt.Orientation.Horizontal)
         motor_slider.setRange(0, 100)
-        motor_slider.valueChanged.connect(lambda val: self.send_motor(val))
+        motor_slider.valueChanged.connect(self.send_motor)
         grid.addWidget(motor_slider, 3, 0)
 
         motor_label = QLabel("Steering angle")
@@ -70,7 +64,7 @@ class RosDashboard(QMainWindow):
 
         steering_slider = QSlider(QtCore.Qt.Orientation.Horizontal)
         steering_slider.setRange(0, 120)
-        steering_slider.valueChanged.connect(lambda val: self.send_steering(val))
+        steering_slider.valueChanged.connect(self.send_steering)
         grid.addWidget(steering_slider, 5, 0)
 
     def send_emergency_stop(self, stop: bool):
@@ -103,6 +97,7 @@ class RosDashboard(QMainWindow):
 
 
 if __name__ == "__main__":
+    rospy.init_node('ros_dashboard')
     app = QtWidgets.QApplication(sys.argv)
     mainWin = RosDashboard()
     mainWin.show()

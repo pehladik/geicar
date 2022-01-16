@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+    <name>ros_emergency_stop</name>
+    <version>0.0.1</version>
+    <description>
+        A node that sends an emergency stop command whenever the ultrasonic sensor or the radar detect an obstacle in a given area.
+    </description>
+
+    <maintainer email="ysimard@insa-toulouse.fr">yohan</maintainer>
+
+    <license>BSD</license>
+
+    <buildtool_depend>catkin</buildtool_depend>
+    <depend>roscpp</depend>
+    <depend>std_msgs</depend>
+    <depend>stm32_ros_msgs</depend>
+
+    <export>
+    </export>
+</package>
