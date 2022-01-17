@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
 				case 0xf4: {
 					std_msgs::Float32 ros_msg;
 					uint16_t dist_mm = (can_msg.payload[0] << 8) + can_msg.payload[1];
-					ros_msg.data = float(dist_mm) / 10;
+					ros_msg.data = float(dist_mm) / 1000; // convert to meters
 					publisher_us.publish(ros_msg);
 					break;
 				}
@@ -90,8 +90,8 @@ bool send_emergency_stop(emergency_stopRequest &request, emergency_stopResponse 
 	can_msg.payload[0] = request.stop;
 	can_msg.dlc = 1;
 	bool success = simply_send(&can_msg);
-	if (!success)
-		ROS_ERROR("Unable to send emergency stop command: %s\n", get_last_error().c_str());
+//	if (!success)
+//		ROS_ERROR("Unable to send emergency stop command: %s\n", get_last_error().c_str());
 	return success;
 }
 
@@ -101,8 +101,8 @@ bool send_brakes(brakesRequest &request, brakesResponse &response) {
 	can_msg.payload[0] = request.brakes_on;
 	can_msg.dlc = 1;
 	bool success = simply_send(&can_msg);
-	if (!success)
-		ROS_ERROR("Unable to send brakes command: %s\n", get_last_error().c_str());
+//	if (!success)
+//		ROS_ERROR("Unable to send brakes command: %s\n", get_last_error().c_str());
 	return success;
 }
 
@@ -112,8 +112,8 @@ bool send_motor_power(motorRequest &request, motorResponse &response) {
 	can_msg.payload[0] = request.power;
 	can_msg.dlc = 1;
 	bool success = simply_send(&can_msg);
-	if (!success)
-		ROS_ERROR("Unable to send motor command: %s\n", get_last_error().c_str());
+//	if (!success)
+//		ROS_ERROR("Unable to send motor command: %s\n", get_last_error().c_str());
 	return success;
 }
 
@@ -123,8 +123,8 @@ bool send_steering_angle(steeringRequest &request, steeringResponse &response) {
 	can_msg.payload[0] = request.angle;
 	can_msg.dlc = 1;
 	bool success = simply_send(&can_msg);
-	if (!success)
-		ROS_ERROR("Unable to send steering command: %s\n", get_last_error().c_str());
+//	if (!success)
+//		ROS_ERROR("Unable to send steering command: %s\n", get_last_error().c_str());
 	return success;
 }
 

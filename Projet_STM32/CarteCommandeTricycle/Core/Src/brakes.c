@@ -6,7 +6,7 @@
 bool emergency_stop_state = 0;
 
 /// Speed of the brake actuator: 0 -> 500 for 0 -> 100%
-#define BRAKES_ACTUATOR_SPEED 250
+#define BRAKES_ACTUATOR_SPEED 500
 
 void brakes_init(void) {
 	// Activation de la commande BREAK par '0'
@@ -26,6 +26,7 @@ void set_emergency_stop(bool state) {
 		brakes_set(true);
 	} else {
 		motor_set_power(1);
+		brakes_set(false);
 	}
 }
 
@@ -38,24 +39,23 @@ void brakes_set(bool brake) {
 	// Activation du frein moteur (je crois ?) (activation à 0, desactivation a 1)
 	HAL_GPIO_WritePin(Out_BREAK_GPIO_Port, Out_BREAK_Pin, !brake); //PA7
 
-//	// Direction du verin de freinage
-//	HAL_GPIO_WritePin(Direct_FREIN_GPIO_Port, Direct_FREIN_Pin, brake); //PC9
-//
-//	// Demarrage de la PWM pour le verin
-//	TIM3->CCR1 = BRAKES_ACTUATOR_SPEED;
+	// Direction du verin de freinage
+	HAL_GPIO_WritePin(Direct_FREIN_GPIO_Port, Direct_FREIN_Pin, brake); //PC9
+
+	// Demarrage de la PWM pour le verin
+	TIM3->CCR1 = BRAKES_ACTUATOR_SPEED;
 
 	// Attente du capteur de fin de course TODO: prevoir timeout
-	GPIO_TypeDef *end_travel_sensor_port = brake ? Fin_de_course_in_GPIO_Port : Fin_de_course_out_GPIO_Port;
-	uint16_t end_travel_sensor_pin = brake ? Fin_de_course_in_Pin : Fin_de_course_out_Pin;
-	while (HAL_GPIO_ReadPin(end_travel_sensor_port, end_travel_sensor_pin)) {
-//		HAL_Delay(10);
-		// Direction du verin de freinage
-		HAL_GPIO_WritePin(Direct_FREIN_GPIO_Port, Direct_FREIN_Pin, brake); //PC9
-
-		// Demarrage de la PWM pour le verin
-		TIM3->CCR1 = BRAKES_ACTUATOR_SPEED;
-	}
+//	GPIO_TypeDef *end_travel_sensor_port = brake ? Fin_de_course_in_GPIO_Port : Fin_de_course_out_GPIO_Port; // NOLINT(bugprone-branch-clone)
+//	uint16_t end_travel_sensor_pin = brake ? Fin_de_course_in_Pin : Fin_de_course_out_Pin;
+//	while (HAL_GPIO_ReadPin(end_travel_sensor_port, end_travel_sensor_pin)) {
+//		// Direction du verin de freinage
+//		HAL_GPIO_WritePin(Direct_FREIN_GPIO_Port, Direct_FREIN_Pin, brake); //PC9
+//
+//		// Demarrage de la PWM pour le verin
+//		TIM3->CCR1 = BRAKES_ACTUATOR_SPEED;
+//	}
 
 	// Arret de la PWM
-	TIM3->CCR1 = 0;
+//	TIM3->CCR1 = 0;
 }

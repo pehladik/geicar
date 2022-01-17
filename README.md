@@ -32,7 +32,48 @@ The projects are (or were) surpervised by:
 - CMake
 - Ros 1 (tested on ROS Noetic)
 
-### Ros node
+### Building
+
+Run these commands in the geiflix folder:
+
+```bash
+mkdir build
+cd build
+cmake -DVISUALIZER=True ..
+make -j 8
+```
+
+You can specify what you want to build with the option `--target [target_name]` of the last command.
+
+### Running
+
+The first thing to do is to source the setup file:
+
+```bash
+source devel/setup.bash
+```
+
+(replace "bash" with your shell if you are using another one)
+
+Then, you can run each node one by one:
+
+In another terminal, start `roscore`. Then in your previous terminal, you can try:
+
+```bash
+rosrun ros_dashboard ros_dashboard.py
+rosrun radar radar_node dump_file.txt
+# etc.
+```
+
+But you can also use the convenient launch files to run them all in the same command, already configured properly:
+
+```bash
+cd ../launch_files
+./sudo_roslaunch.sh main.launch
+```
+
+
+### Old instructions
 
 #### Building
 

@@ -12,9 +12,8 @@ void stop_button_callback() {
 	while (!HAL_GPIO_ReadPin(STOP_GPIO_Port, STOP_Pin)) { // touche STOP maintenue enfoncée pour Shut down alimentation
 		delay_ShutDown++;
 		if (delay_ShutDown > 5000000) { //
-			/* mise OFF de l'alimentation tricycle*/
+			// mise OFF de l'alimentation tricycle
 			HAL_GPIO_WritePin(Out_MAINTIEN_GPIO_Port, Out_MAINTIEN_Pin, GPIO_PIN_RESET); //PC4
-			// arret alim
 		}
 	}
 }
