@@ -45,7 +45,10 @@ void brakes_set(bool brake) {
 	// Demarrage de la PWM pour le verin
 	TIM3->CCR1 = BRAKES_ACTUATOR_SPEED;
 
-	// Attente du capteur de fin de course TODO: prevoir timeout
+	// TODO: prendre en compte capteurs de fin de course et prevoir timeout
+	// Le code ci-dessous bloque jusqu'a ce que le capteur soit declenché, ce qui rend les démos fastidieuses
+
+	// Attente du capteur de fin de course
 //	GPIO_TypeDef *end_travel_sensor_port = brake ? Fin_de_course_in_GPIO_Port : Fin_de_course_out_GPIO_Port; // NOLINT(bugprone-branch-clone)
 //	uint16_t end_travel_sensor_pin = brake ? Fin_de_course_in_Pin : Fin_de_course_out_Pin;
 //	while (HAL_GPIO_ReadPin(end_travel_sensor_port, end_travel_sensor_pin)) {
