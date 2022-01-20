@@ -4,12 +4,13 @@ The GeiBike project is a project carried out by students at [INSA Toulouse](http
 
 This repository is intended to provide a basis for students starting a new project on the GeiBike. The present code as well as the documentation is the result of the combination of the various projects carried out by:
 
-* Matis Delcourt
-* Nicolas Fercoq
-* Marcos Frances
-* Mathilde Ibled
-* Yiannis Manzo
-* Yohan Simard
+- Muttley team (2021-2022):
+  * Matis Delcourt
+  * Nicolas Fercoq
+  * Marcos Frances
+  * Mathilde Ibled
+  * Yiannis Manzo
+  * Yohan Simard
 
 The platform is (or was) developped and maintained by :
 
@@ -22,6 +23,12 @@ The projects are (or were) surpervised by:
 
 * CHANTHERY Elodie
 * AURIOL Guillaume
+
+## Resources
+
+The slides for the sprint reviews and the posters can be found at the following links:
+
+- [Muttley team (2021-2022)](https://drive.google.com/drive/folders/1gfQWTaghTNbTpblPRNZOpv6hvGePmNHc?usp=sharing)
 
 ## Quick User Guide
 
