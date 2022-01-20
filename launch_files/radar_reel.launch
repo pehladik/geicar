@@ -1,4 +1,4 @@
 <launch>
     <node name="visualizer" pkg="ros_visualizer" type="ros_visualizer_node"/>
-    <node name="radar_reel" pkg="radar" type="radar_node" args="/dev/ttyACM1" cwd="node"/>
+    <node name="radar_reel" pkg="ros_radar" type="ros_radar_node" args="/dev/ttyACM1" cwd="node"/>
 </launch>

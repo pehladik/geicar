@@ -27,7 +27,7 @@ The projects are (or were) surpervised by:
 
 ### Requirements
 
-- Linux or WSL
+- Linux (or WSL, but with limited functionalities and more complex setup)
 - Any C++ compiler (`sudo apt install build-essential`)
 - CMake
 - Ros 1 (tested on ROS Noetic)
@@ -43,9 +43,15 @@ cmake -DVISUALIZER=True ..
 make -j 8
 ```
 
-You can specify what you want to build with the option `--target [target_name]` of the last command.
+You can specify what you want to build by appending the name of a target to the last command. 
+
+For ROS nodes, the targets names are the name of their subdirectory + `_node`. For example, the `ros_visualizer` directory contains a node named `ros_visualizer_node`. You can build it using `make -j 8 ros_visualizer_node`
+
+For other executables, the names are not really unified (TODO 😅). Check in the corresponding `CMakeLists.txt` file, or just build everything. 
 
 ### Running
+
+#### ROS nodes
 
 The first thing to do is to source the setup file:
 
@@ -61,7 +67,7 @@ In another terminal, start `roscore`. Then in your previous terminal, you can tr
 
 ```bash
 rosrun ros_dashboard ros_dashboard.py
-rosrun radar radar_node dump_file.txt
+rosrun radar radar_node some_dump_file.txt
 # etc.
 ```
 
@@ -72,122 +78,30 @@ cd ../launch_files
 ./sudo_roslaunch.sh main.launch
 ```
 
+#### Non-ROS executables
 
-### Old instructions
+For other executables, you will need to launch them manually.
 
-#### Building
+The actual executable file is located in the build folder, at the same relative path as the `CMakeLists.txt` file in the project. For example, the radar_visualizer executable is defined in the [`function_3-Radar/visualizer/CMakeLists.txt`](function_3-Radar/visualizer/CMakeLists.txt) file. The path to the executable file is then `build/function_3-Radar/visualizer/radar_visualizer`.
 
-Clone the project and cd into it.
+### Troubleshooting
 
-```bash
-mkdir build
-cd build
-cmake ..
-cmake --build . --target radar_node
-```
+#### WSL
 
-#### Running
+You will not be able to build nor run the visualizer in WSL without installing some graphical libraries on Ubuntu and setting up an X11 server on Windows. You will find tutorials to do so on Internet.
 
-In a separate terminal, run the ROS server:
+However, we strongly recommend using a computer running on linux, and more precisely the last Ubuntu version supported by ROS.
 
-```bash
-roscore
-```
+### Subsequent work and improvements to do
 
-Then, launch the program that sends the radar messages to the ROS topic `radar_frames`:
+Here is listed ideas to improve the current project. Other ideas specific to a part of the project are listed in the subdirectory's README files. 
 
-```bash
-# in the build folder
-source devel/setup.bash
-devel/lib/radar/radar_node ../function_3-Radar/radar_dump.txt
-```
+#### Catkin
 
-(You can change the argument to be another dump file or even the path to the actual simplyCAN converter to use the real radar)
+We did not know about ROS at the beginning of the project, so we began with a regular CMake setup. We then added some ROS nodes, and thought it would be simpler to continue using plain CMake. It could be possible and preferable to build ROS **and** non-ROS package with catkin.
 
-Add the `-dump <path>` option to dump the raw radar messages to a file in order to replay them.
+Additionnally, we created one package per node, but it is quite useless. It is possible to create several nodes inside one package.
 
-You can now echo the messages published to the topic with this command:
+#### Real tricycle
 
-```bash
-# in the build folder
-source devel/setup.bash
-rostopic echo radar_frames
-```
-
-### Visualizer (using ROS)
-
-#### Building
-
-Clone the project and cd into it.
-
-```bash
-mkdir build
-cd build
-cmake -DVISUALIZER=True ..
-cmake --build . --target ros_visualizer_node
-cmake --build . --target radar_node
-```
-
-#### Running
-
-In a separate terminal, run the ROS server:
-
-```bash
-roscore
-```
-
-Launch the visualizer:
-
-```bash
-# in the build folder
-source devel/setup.bash
-devel/lib/ros_visualizer/ros_visualizer_node
-```
-
-Then, in another terminal, launch `radar_node` (the program that publishes the radar messages):
-
-```bash
-# in the build folder
-source devel/setup.bash
-devel/lib/radar/radar_node ../function_3-Radar/radar_dump.txt
-```
-
-(You can change the argument to be another dump file or even the path to the actual simplyCAN converter to use the real radar)
-
-Add the `-dump <path>` option to dump the raw radar messages to a file in order to replay them.
-
-#### Commands
-
-You can pan and zoom using the mouse (left click and scroll).
-
-You can toggle displaying the speed vectors, distances and warning regions with the keys S, M and W respectively.
-
-You can change the configuration of the radar with the keys D (max distance), O (objects or clusters), P (power) and R (RCS
-threshold).
-
-### Visualizer (not using ROS)
-
-#### Building
-
-Clone the project and cd into it.
-
-```bash
-mkdir build
-cd build
-cmake -DVISUALIZER=True ..
-cmake --build . --target radar_visualizer
-function_3-Radar/radar_visualizer ../function_3-Radar/radar_dump.txt
-```
-
-(You can change the argument to be another dump file or even the path to the actual simplyCAN converter to use the real radar)
-
-Add the `-dump <path>` option to dump the raw radar messages to a file in order to replay them.
-
-#### Commands
-
-You can pan and zoom using the mouse (left click and scroll).
-
-You can toggle displaying the speed vectors, distances and warning regions with the keys S, M and W respectively.
-
-You can change the configuration of the radar with the keys D (max distance), O (objects or clusters), P (power) and R (RCS
-threshold).
+When the radar will be mounted on the real tricycle, you should send the speed and the steering angle so that it can deduce the speed of the objects and better track them.

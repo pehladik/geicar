@@ -14,7 +14,7 @@ void print_usage_and_exit(std::string_view exe_name) {
 }
 
 int main(int argc, char **argv) {
-	ros::init(argc, argv, "radar_node");
+	ros::init(argc, argv, "ros_radar_node");
 
 	// Parse arguments
 	std::optional<std::string> path{};

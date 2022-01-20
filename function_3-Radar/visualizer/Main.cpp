@@ -35,7 +35,7 @@ protected:
 	}
 
 	std::optional<float> get_ultrasonic_measure() override {
-		return 2;
+		return std::nullopt;
 	}
 
 	void send_config(const RadarConfiguration &configuration) override {

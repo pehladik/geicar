@@ -1,4 +1,3 @@
-import math
 import rospy
 from stm32_ros_msgs.srv import emergency_stop
 import radar_ros_msgs.msg as radar
@@ -22,13 +21,12 @@ class EmergencyStop:
         self.emergency_stop_state = False
 
     def send_emergency_stop(self, stop):
-        print(f"setting emergency stop {stop}")
         try:
             success = self.emergency_stop_srv(stop)
             if not success:
-                print("Failed to set emergency brakes")
+                rospy.logerr_once("Failed to set emergency brakes")
         except rospy.ServiceException as e:
-            print("Service call failed: %s" % e)
+            rospy.logerr_once("Service call failed: %s" % e)
 
     def update_emergency_stop(self):
         new_state = self.object_detected_us or self.object_detected_radar

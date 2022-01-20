@@ -28,6 +28,7 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 	const glm::vec4 blue{0, 0, 1, 1};
 	const glm::vec4 violet{1, 0, 1, 1};
 	const glm::vec4 yellow{.8, .8, 0, 1};
+	const glm::vec4 orange{.8, .4, 0, 1};
 	const glm::vec4 cyan{0, 1, 1, 1};
 	const glm::vec4 gray{0.75, 0.75, 0.75, 1};
 
@@ -43,26 +44,24 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 
 	g.push();
 	g.noStroke();
-//	g.fill(red);
-//	g.text("car", 20, 70);
-//	g.fill(green);
-//	g.text("pedestrians", 20, 100);
-//	g.fill(blue);
-//	g.text("points", 20, 130);
-//	g.fill(violet);
-//	g.text("bicycle", 20, 160);
-//	g.fill(yellow);
-//	g.text("motorcycle", 20, 190);
-//	g.fill(cyan);
-//	g.text("truck", 20, 220);
-//	g.fill(gray);
-//	g.text("wide", 20, 250);
-//	g.fill(black);
-//	g.text("other", 20, 280);
-	g.fill(black);
-	g.text("radar", 20, 100);
+	g.fill(red);
+	g.text("car", 20, 70);
+	g.fill(green);
+	g.text("pedestrians", 20, 100);
 	g.fill(blue);
-	g.text("ultrasonic sensor", 20, 130);
+	g.text("points", 20, 130);
+	g.fill(violet);
+	g.text("bicycle", 20, 160);
+	g.fill(yellow);
+	g.text("motorcycle", 20, 190);
+	g.fill(cyan);
+	g.text("truck", 20, 220);
+	g.fill(gray);
+	g.text("wide", 20, 250);
+	g.fill(black);
+	g.text("other", 20, 280);
+	g.fill(orange);
+	g.text("ultrasonic sensor", 20, 310);
 
 //	auto state = get_state();
 //	if (state.has_value()) {
@@ -189,11 +188,10 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 				std::stringstream ss_dist;
 				ss_dist << std::fixed << std::setprecision(1) << dist << "m";
 				g.push();
-				g.textSize(25);
+				g.textSize(20);
 				g.strokeWeight(1);
 				g.noStroke();
-//				g.fill(gray - transparency);
-				g.fill(black);
+				g.fill({0, 0, 0, .4});
 				g.text(ss_dist.str(), x, y);
 				g.pop();
 			}
@@ -210,18 +208,18 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 		auto y = screen_coord.y;
 
 		g.strokeWeight(10);
-		g.stroke(blue);
-		g.fill(blue);
+		g.stroke(orange);
+		g.fill(orange);
 		g.rect(x, y, 5, 20);
 
 		if (display_distance) {
 			std::stringstream ss_dist;
 			ss_dist << std::fixed << std::setprecision(1) << dist << "m";
 			g.push();
-			g.textSize(25);
+			g.textSize(20);
 			g.strokeWeight(1);
 			g.noStroke();
-			g.fill(blue);
+			g.fill(orange - glm::vec4{0,0,0,.5});
 			g.text(ss_dist.str(), x, y);
 			g.pop();
 		}
