@@ -159,7 +159,7 @@ def shortestpath(Graph,End_node:Node,Start_node:Node):
     while not open_l.vide():
         i=i+1
         #Print pour savoir le nombre d'itération
-        if(i%100==0):
+        if(i%2000==0):
             print("Itération :"+str(i))
             print("Closed List len :"+str(len(close_l)))
             print("Open List len :"+str(open_l.len()))
@@ -212,12 +212,6 @@ if __name__=="__main__":
     end=Node((8,6),3,0,False)
     start=Node((0,0),0,0,False)
     shortestpath(graph,end,start)
-
-
-                
-                
-
-            
 
 
         
