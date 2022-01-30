@@ -36,7 +36,7 @@ void Radar::process() {
 			}
 			message_queue.push_back(std::move(msg));
 		} catch (const std::runtime_error &e) {
-			std::cout << e.what() << std::endl;
+// 			std::cout << e.what() << std::endl;
 		}
 	}
 }

@@ -1,11 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-    <name>stm32_can_receiver</name>
+    <name>ros_radar</name>
     <version>0.0.1</version>
-    <description>
-        A package that publishes the messages sent on the CAN bus by the STM32 (ultrasound sensor
-        measures, initialization, etc.)
-    </description>
+    <description>This packages publishes the coordinates of all objects detected by the radar</description>
 
     <maintainer email="ysimard@insa-toulouse.fr">yohan</maintainer>
 
@@ -13,8 +10,7 @@
 
     <buildtool_depend>catkin</buildtool_depend>
     <depend>roscpp</depend>
-    <depend>std_msgs</depend>
-    <depend>stm32_ros_msgs</depend>
+    <depend>radar_ros_msgs</depend>
 
     <export>
     </export>

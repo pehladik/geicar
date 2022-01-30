@@ -12,14 +12,14 @@ std::string get_last_error();
 
 using namespace stm32_ros_msgs;
 
-bool send_motor_power(motorRequest &request, motorResponse &response);
-bool send_brakes(brakesRequest &request, brakesResponse &response);
-bool send_emergency_stop(emergency_stopRequest &request, emergency_stopResponse &response);
-bool send_steering_angle(steeringRequest &request, steeringResponse &response);
+bool send_motor_power(motor::Request &request, motor::Response &response);
+bool send_brakes(brakes::Request &request, brakes::Response &response);
+bool send_emergency_stop(emergency_stop::Request &request, emergency_stop::Response &response);
+bool send_steering_angle(steering::Request &request, steering::Response &response);
 
 
 int main(int argc, char **argv) {
-	ros::init(argc, argv, "stm32_can_receiver_node");
+	ros::init(argc, argv, "ros_stm32_can_node");
 
 	if (argc != 2) {
 		ROS_ERROR("One argument required: path to the CAN device");
@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
 		return 4;
 	}
 
-	ros::Rate loop_rate(10);
+	ros::Rate loop_rate(20);
 
 	while (ros::ok()) {
 		can_msg_t can_msg;
@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
 				case 0xf4: {
 					std_msgs::Float32 ros_msg;
 					uint16_t dist_mm = (can_msg.payload[0] << 8) + can_msg.payload[1];
-					ros_msg.data = float(dist_mm) / 10;
+					ros_msg.data = float(dist_mm) / 1000; // convert to meters
 					publisher_us.publish(ros_msg);
 					break;
 				}
@@ -84,47 +84,47 @@ int main(int argc, char **argv) {
 	return 0;
 }
 
-bool send_emergency_stop(emergency_stopRequest &request, emergency_stopResponse &response) {
+bool send_emergency_stop(emergency_stop::Request &request, emergency_stop::Response &response) {
 	can_msg_t can_msg{};
 	can_msg.ident = request.CAN_ID;
 	can_msg.payload[0] = request.stop;
 	can_msg.dlc = 1;
 	bool success = simply_send(&can_msg);
-	if (!success)
-		ROS_ERROR("Unable to send emergency stop command: %s\n", get_last_error().c_str());
+	if (success) {ROS_INFO("Sent emergency stop cmd %d", request.stop);}
+	else {ROS_ERROR_ONCE("Unable to send emergency stop command: %s", get_last_error().c_str());}
 	return success;
 }
 
-bool send_brakes(brakesRequest &request, brakesResponse &response) {
+bool send_brakes(brakes::Request &request, brakes::Response &response) {
 	can_msg_t can_msg{};
 	can_msg.ident = request.CAN_ID;
 	can_msg.payload[0] = request.brakes_on;
 	can_msg.dlc = 1;
 	bool success = simply_send(&can_msg);
-	if (!success)
-		ROS_ERROR("Unable to send brakes command: %s\n", get_last_error().c_str());
+	if (success) {ROS_INFO("Sent brakes cmd %d", request.brakes_on);}
+	else {ROS_ERROR_ONCE("Unable to send brakes command: %s\n", get_last_error().c_str());}
 	return success;
 }
 
-bool send_motor_power(motorRequest &request, motorResponse &response) {
+bool send_motor_power(motor::Request &request, motor::Response &response) {
 	can_msg_t can_msg{};
 	can_msg.ident = request.CAN_ID;
 	can_msg.payload[0] = request.power;
 	can_msg.dlc = 1;
 	bool success = simply_send(&can_msg);
-	if (!success)
-		ROS_ERROR("Unable to send motor command: %s\n", get_last_error().c_str());
+	if (success) {ROS_INFO("Sent motor cmd %d", request.power);}
+	else {ROS_ERROR_ONCE("Unable to send motor command: %s\n", get_last_error().c_str());}
 	return success;
 }
 
-bool send_steering_angle(steeringRequest &request, steeringResponse &response) {
+bool send_steering_angle(steering::Request &request, steering::Response &response) {
 	can_msg_t can_msg{};
 	can_msg.ident = request.CAN_ID;
 	can_msg.payload[0] = request.angle;
 	can_msg.dlc = 1;
 	bool success = simply_send(&can_msg);
-	if (!success)
-		ROS_ERROR("Unable to send steering command: %s\n", get_last_error().c_str());
+	if (success) {ROS_INFO("Sent steering cmd %d", request.angle);}
+	else {ROS_ERROR_ONCE("Unable to send steering command: %s\n", get_last_error().c_str());}
 	return success;
 }
 

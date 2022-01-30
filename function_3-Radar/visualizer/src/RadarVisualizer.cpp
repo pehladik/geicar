@@ -4,15 +4,8 @@
 #include <iomanip>
 #include "RadarVisualizer.hpp"
 
-RadarVisualizer::RadarVisualizer(std::function<void()> process,
-                                 std::function<std::optional<Measure>()> measure_getter,
-                                 std::function<void(const RadarConfiguration &)> config_sender,
-                                 std::function<std::optional<RadarState>()> state_getter) :
-		piksel::BaseApp(1920, 1000),
-		process{std::move(process)},
-		get_measure{std::move(measure_getter)},
-		get_state{std::move(state_getter)},
-		send_config{std::move(config_sender)} {}
+RadarVisualizer::RadarVisualizer() :
+		piksel::BaseApp(1920, 1000) {}
 
 void RadarVisualizer::setup() {}
 
@@ -20,7 +13,7 @@ constexpr double deg2rad(double a) {
 	return a * (M_PI / 180);
 }
 
-bool RadarVisualizer::is_obstacle_dangerous(const Object &obj) const {
+bool RadarVisualizer::is_obstacle_dangerous(const Object &obj, glm::vec2 warning_region_size) const {
 	return obj.distance_long < warning_region_size.x &&
 	       obj.distance_lat < warning_region_size.y / 2 &&
 	       obj.distance_lat > -warning_region_size.y / 2;
@@ -35,6 +28,7 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 	const glm::vec4 blue{0, 0, 1, 1};
 	const glm::vec4 violet{1, 0, 1, 1};
 	const glm::vec4 yellow{.8, .8, 0, 1};
+	const glm::vec4 orange{.8, .4, 0, 1};
 	const glm::vec4 cyan{0, 1, 1, 1};
 	const glm::vec4 gray{0.75, 0.75, 0.75, 1};
 
@@ -66,20 +60,22 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 	g.text("wide", 20, 250);
 	g.fill(black);
 	g.text("other", 20, 280);
+	g.fill(orange);
+	g.text("ultrasonic sensor", 20, 310);
 
-	auto state = get_state();
-	if (state.has_value()) {
-		g.textSize(11);
-		std::stringstream ss;
-		ss << state.value();
-		g.text(ss.str(), 20, 2 * height / 3);
-	}
+//	auto state = get_state();
+//	if (state.has_value()) {
+//		g.textSize(11);
+//		std::stringstream ss;
+//		ss << state.value();
+//		g.text(ss.str(), 20, 2 * height / 3);
+//	}
 
-	g.textSize(18);
-	std::stringstream ss_key;
-	ss_key << (char) m_key;
-	g.text(ss_key.str(), width - 40, 20);
-	g.text(std::to_string(m_key), width - 40, 45);
+//	g.textSize(18);
+//	std::stringstream ss_key;
+//	ss_key << (char) m_key;
+//	g.text(ss_key.str(), width - 40, 20);
+//	g.text(std::to_string(m_key), width - 40, 45);
 	g.pop();
 
 	// radar
@@ -113,9 +109,12 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 	draw_polygon(g, range);
 	g.pop();
 
-	auto measure = get_measure();
-	if (measure.has_value()) {
-		unsigned nObjects = measure->objects.size();
+	bool danger = false;
+	auto warning_region_size = get_warning_region_size();
+
+	auto radar_measure = get_radar_measure();
+	if (radar_measure.has_value()) {
+		unsigned nObjects = radar_measure->objects.size();
 
 		if (display_warning) {
 			g.push();
@@ -132,16 +131,6 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 			ss << std::setprecision(2) << warning_region_size.x << "*" << warning_region_size.y;
 			g.text(ss.str(), width - 130, height - 40);
 			g.pop();
-			bool danger = std::any_of(measure->objects.begin(), measure->objects.end(),
-			                          [this](const Object &o) {return is_obstacle_dangerous(o);});
-			if (danger) {
-				g.push();
-				g.textSize(100);
-				g.noStroke();
-				g.fill(red);
-				g.text("obstacle", width - 630, 130);
-				g.pop();
-			}
 		}
 
 		g.push();
@@ -151,7 +140,7 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 		g.pop();
 
 		for (int i = 0; i < nObjects; i++) {
-			const Object &object = measure->objects[i];
+			const Object &object = radar_measure->objects[i];
 
 			const auto screen_coord = radar_to_screen_coord(object.distance_long, object.distance_lat);
 			const float x = screen_coord.x;
@@ -199,14 +188,53 @@ void RadarVisualizer::draw(piksel::Graphics &g) {
 				std::stringstream ss_dist;
 				ss_dist << std::fixed << std::setprecision(1) << dist << "m";
 				g.push();
-				g.textSize(15);
+				g.textSize(20);
 				g.strokeWeight(1);
 				g.noStroke();
-				g.fill(gray - transparency);
+				g.fill({0, 0, 0, .4});
 				g.text(ss_dist.str(), x, y);
 				g.pop();
 			}
+
+			danger |= is_obstacle_dangerous(object, warning_region_size);
 		}
+	}
+
+	std::optional<float> ultrasonic_measure = get_ultrasonic_measure();
+	if (ultrasonic_measure.has_value()) {
+		const auto dist = ultrasonic_measure.value();
+		const auto screen_coord = radar_to_screen_coord(dist, 0);
+		auto x = screen_coord.x;
+		auto y = screen_coord.y;
+
+		g.strokeWeight(10);
+		g.stroke(orange);
+		g.fill(orange);
+		g.rect(x, y, 5, 20);
+
+		if (display_distance) {
+			std::stringstream ss_dist;
+			ss_dist << std::fixed << std::setprecision(1) << dist << "m";
+			g.push();
+			g.textSize(20);
+			g.strokeWeight(1);
+			g.noStroke();
+			g.fill(orange - glm::vec4{0,0,0,.5});
+			g.text(ss_dist.str(), x, y);
+			g.pop();
+		}
+
+		danger |= dist < warning_region_size.x;
+
+	}
+
+	if (danger && display_warning) {
+		g.push();
+		g.textSize(70);
+		g.noStroke();
+		g.fill(red);
+		g.text("obstacle", width - 450, 100);
+		g.pop();
 	}
 }
 
@@ -282,9 +310,10 @@ void RadarVisualizer::mouseMoved(int x, int y) {
 		offset += delta / zoom;
 	}
 	if (right_clicking) {
-		warning_region_size = screen_to_radar_coord(mouse_position);
+		glm::vec2 warning_region_size = screen_to_radar_coord(mouse_position);
 		warning_region_size.y *= 2;
 		warning_region_size.y = abs(warning_region_size.y);
+		send_warning_region_size(warning_region_size);
 	}
 }
 

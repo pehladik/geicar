@@ -48,6 +48,8 @@ void CAN_send(CAN_HandleTypeDef *hcan, uint32_t id, uint8_t *data, uint8_t lengt
 }
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
+	// TODO: deactivate in "local" mode
+
 	CAN_RxHeaderTypeDef header;
 	uint8_t data[8];
 	if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &header, data) != HAL_OK) {

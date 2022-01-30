@@ -1,4 +1,3 @@
-import math
 import rospy
 from stm32_ros_msgs.srv import emergency_stop
 import radar_ros_msgs.msg as radar
@@ -19,32 +18,38 @@ class EmergencyStop:
         self.prev_us_measure = rospy.get_param(TRIGGER_DIST_LONG) + 1
         self.object_detected_radar = False
         self.object_detected_us = False
+        self.emergency_stop_state = False
 
-    def send_emergency_stop(self, stop: bool):
-        print(f"setting emergency stop {stop}")
+    def send_emergency_stop(self, stop):
         try:
             success = self.emergency_stop_srv(stop)
             if not success:
-                print("Failed to set emergency brakes")
+                rospy.logerr_once("Failed to set emergency brakes")
         except rospy.ServiceException as e:
-            print("Service call failed: %s" % e)
+            rospy.logerr_once("Service call failed: %s" % e)
 
-    def callback_us(self, measure: Float32):
+    def update_emergency_stop(self):
+        new_state = self.object_detected_us or self.object_detected_radar
+        if new_state != self.emergency_stop_state:
+            self.send_emergency_stop(new_state)
+            self.emergency_stop_state = new_state
+
+    def callback_us(self, measure):
         trigger_dist_long = rospy.get_param(TRIGGER_DIST_LONG)
         self.object_detected_us = self.prev_us_measure < trigger_dist_long or measure.data < trigger_dist_long
-        self.send_emergency_stop(self.object_detected_us or self.object_detected_radar)
         self.prev_us_measure = measure.data
+        self.update_emergency_stop()
 
-    def callback_radar(self, frame: radar.frame):
+    def callback_radar(self, frame):
         self.object_detected_radar = object_in_trigger_zone(frame)
-        self.send_emergency_stop(self.object_detected_us or self.object_detected_radar)
+        self.update_emergency_stop()
 
 
-def object_in_trigger_zone(frame: radar.frame):
+def object_in_trigger_zone(frame):
     trigger_dist_long = rospy.get_param(TRIGGER_DIST_LONG)
     trigger_dist_lat = rospy.get_param(TRIGGER_DIST_LAT)
     for obj in frame.objects:
-        if obj.distance_long < trigger_dist_long and obj.distance_lat < trigger_dist_lat / 2:
+        if obj.distance_long < trigger_dist_long and abs(obj.distance_lat) < (trigger_dist_lat / 2):
             return True
     return False
 

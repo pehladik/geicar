@@ -4,12 +4,13 @@ The GeiBike project is a project carried out by students at [INSA Toulouse](http
 
 This repository is intended to provide a basis for students starting a new project on the GeiBike. The present code as well as the documentation is the result of the combination of the various projects carried out by:
 
-* Matis Delcourt
-* Nicolas Fercoq
-* Marcos Frances
-* Mathilde Ibled
-* Yiannis Manzo
-* Yohan Simard
+- Muttley team (2021-2022):
+  * Matis Delcourt
+  * Nicolas Fercoq
+  * Marcos Frances
+  * Mathilde Ibled
+  * Yiannis Manzo
+  * Yohan Simard
 
 The platform is (or was) developped and maintained by :
 
@@ -23,130 +24,91 @@ The projects are (or were) surpervised by:
 * CHANTHERY Elodie
 * AURIOL Guillaume
 
+## Resources
+
+The slides for the sprint reviews and the posters can be found at the following links:
+
+- [Muttley team (2021-2022)](https://drive.google.com/drive/folders/1gfQWTaghTNbTpblPRNZOpv6hvGePmNHc?usp=sharing)
+
 ## Quick User Guide
 
 ### Requirements
 
-- Linux or WSL
+- Linux (or WSL, but with limited functionalities and more complex setup)
 - Any C++ compiler (`sudo apt install build-essential`)
 - CMake
 - Ros 1 (tested on ROS Noetic)
 
-### Ros node
+### Building
 
-#### Building
-
-Clone the project and cd into it.
-
-```bash
-mkdir build
-cd build
-cmake ..
-cmake --build . --target radar_node
-```
-
-#### Running
-
-In a separate terminal, run the ROS server:
-
-```bash
-roscore
-```
-
-Then, launch the program that sends the radar messages to the ROS topic `radar_frames`:
-
-```bash
-# in the build folder
-source devel/setup.bash
-devel/lib/radar/radar_node ../function_3-Radar/radar_dump.txt
-```
-
-(You can change the argument to be another dump file or even the path to the actual simplyCAN converter to use the real radar)
-
-Add the `-dump <path>` option to dump the raw radar messages to a file in order to replay them.
-
-You can now echo the messages published to the topic with this command:
-
-```bash
-# in the build folder
-source devel/setup.bash
-rostopic echo radar_frames
-```
-
-### Visualizer (using ROS)
-
-#### Building
-
-Clone the project and cd into it.
+Run these commands in the geiflix folder:
 
 ```bash
 mkdir build
 cd build
 cmake -DVISUALIZER=True ..
-cmake --build . --target ros_visualizer_node
-cmake --build . --target radar_node
+make -j 8
 ```
 
-#### Running
+You can specify what you want to build by appending the name of a target to the last command. 
 
-In a separate terminal, run the ROS server:
+For ROS nodes, the targets names are the name of their subdirectory + `_node`. For example, the `ros_visualizer` directory contains a node named `ros_visualizer_node`. You can build it using `make -j 8 ros_visualizer_node`
+
+For other executables, the names are not really unified (TODO 😅). Check in the corresponding `CMakeLists.txt` file, or just build everything. 
+
+### Running
+
+#### ROS nodes
+
+The first thing to do is to source the setup file:
 
 ```bash
-roscore
-```
-
-Launch the visualizer:
-
-```bash
-# in the build folder
 source devel/setup.bash
-devel/lib/ros_visualizer/ros_visualizer_node
 ```
 
-Then, in another terminal, launch `radar_node` (the program that publishes the radar messages):
+(replace "bash" with your shell if you are using another one)
+
+Then, you can run each node one by one:
+
+In another terminal, start `roscore`. Then in your previous terminal, you can try:
 
 ```bash
-# in the build folder
-source devel/setup.bash
-devel/lib/radar/radar_node ../function_3-Radar/radar_dump.txt
+rosrun ros_dashboard ros_dashboard.py
+rosrun radar radar_node some_dump_file.txt
+# etc.
 ```
 
-(You can change the argument to be another dump file or even the path to the actual simplyCAN converter to use the real radar)
-
-Add the `-dump <path>` option to dump the raw radar messages to a file in order to replay them.
-
-#### Commands
-
-You can pan and zoom using the mouse (left click and scroll).
-
-You can toggle displaying the speed vectors, distances and warning regions with the keys S, M and W respectively.
-
-You can change the configuration of the radar with the keys D (max distance), O (objects or clusters), P (power) and R (RCS
-threshold).
-
-### Visualizer (not using ROS)
-
-#### Building
-
-Clone the project and cd into it.
+But you can also use the convenient launch files to run them all in the same command, already configured properly:
 
 ```bash
-mkdir build
-cd build
-cmake -DVISUALIZER=True ..
-cmake --build . --target radar_visualizer
-function_3-Radar/radar_visualizer ../function_3-Radar/radar_dump.txt
+cd ../launch_files
+./sudo_roslaunch.sh main.launch
 ```
 
-(You can change the argument to be another dump file or even the path to the actual simplyCAN converter to use the real radar)
+#### Non-ROS executables
 
-Add the `-dump <path>` option to dump the raw radar messages to a file in order to replay them.
+For other executables, you will need to launch them manually.
 
-#### Commands
+The actual executable file is located in the build folder, at the same relative path as the `CMakeLists.txt` file in the project. For example, the radar_visualizer executable is defined in the [`function_3-Radar/visualizer/CMakeLists.txt`](function_3-Radar/visualizer/CMakeLists.txt) file. The path to the executable file is then `build/function_3-Radar/visualizer/radar_visualizer`.
 
-You can pan and zoom using the mouse (left click and scroll).
+### Troubleshooting
 
-You can toggle displaying the speed vectors, distances and warning regions with the keys S, M and W respectively.
+#### WSL
 
-You can change the configuration of the radar with the keys D (max distance), O (objects or clusters), P (power) and R (RCS
-threshold).
+You will not be able to build nor run the visualizer in WSL without installing some graphical libraries on Ubuntu and setting up an X11 server on Windows. You will find tutorials to do so on Internet.
+
+However, we strongly recommend using a computer running on linux, and more precisely the last Ubuntu version supported by ROS.
+
+### Subsequent work and improvements to do
+
+Here is listed ideas to improve the current project. Other ideas specific to a part of the project are listed in the subdirectory's README files. 
+
+#### Catkin
+
+We did not know about ROS at the beginning of the project, so we began with a regular CMake setup. We then added some ROS nodes, and thought it would be simpler to continue using plain CMake. It could be possible and preferable to build ROS **and** non-ROS package with catkin.
+
+Additionnally, we created one package per node, but it is quite useless. It is possible to create several nodes inside one package.
+
+#### Real tricycle
+
+When the radar will be mounted on the real tricycle, you should send the speed and the steering angle so that it can deduce the speed of the objects and better track them.

@@ -1,4 +1,4 @@
-#include <uart.h>
+#include "uart.h"
 #include "init.h"
 #include "main.h"
 #include "steering.h"
@@ -27,7 +27,7 @@ _Noreturn void Main(void) {
 
 	while (1) {
 		double distance = ultrasound_get_distance_trig_input();
-		uart_print("Distance = %.1f cm\r\n", distance);
+//		uart_print("Distance = %.1f cm\r\n", distance);
 		uint16_t distance_converted = (uint16_t)(distance * 10);
 		data[0] = (distance_converted >> 8) & 0xff;
 		data[1] = distance_converted & 0xff;

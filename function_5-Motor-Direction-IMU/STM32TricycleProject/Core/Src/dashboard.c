@@ -12,9 +12,8 @@ void stop_button_callback() {
 	while (!HAL_GPIO_ReadPin(STOP_GPIO_Port, STOP_Pin)) { // touche STOP maintenue enfoncée pour Shut down alimentation
 		delay_ShutDown++;
 		if (delay_ShutDown > 5000000) { //
-			/* mise OFF de l'alimentation tricycle*/
+			// mise OFF de l'alimentation tricycle
 			HAL_GPIO_WritePin(Out_MAINTIEN_GPIO_Port, Out_MAINTIEN_Pin, GPIO_PIN_RESET); //PC4
-			// arret alim
 		}
 	}
 }
@@ -23,12 +22,11 @@ void brakes_button_callback() {
 	brakes_set(!HAL_GPIO_ReadPin(FREIN_GPIO_Port, FREIN_Pin));
 }
 
+// TODO: change this to be the actual remote/local switch, to select between
+//  controlling the tricycle with the dashboard or the CAN bus
 void remote_button_callback() {
 	const GPIO_PinState pin_state = HAL_GPIO_ReadPin(Remote_GPIO_Port, Remote_Pin);
 	set_emergency_stop(pin_state);
-//	if (!pin_state) {
-//		motor_set_power(0);
-//	}
 }
 
 void turn_button_callback(uint16_t btn_pin) {
@@ -56,6 +54,7 @@ void turn_button_callback(uint16_t btn_pin) {
  * PB1 RIGHT falling edge
  */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+	// TODO: deactivate in "remote" mode
 	HAL_Delay(100); // temps 100 ms pour anti-rebond
 
 	switch (GPIO_Pin) {
