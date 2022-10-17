@@ -1,0 +1,4 @@
+<launch>
+    <node name="dashboard" pkg="ros_dashboard" type="ros_dashboard.py"/>
+    <node name="stm32_can" pkg="ros_stm32_can" type="ros_stm32_can_node" args="/dev/ttyACM2"/>
+</launch>

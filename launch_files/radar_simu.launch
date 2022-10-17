@@ -1,0 +1,4 @@
+<launch>
+    <node name="visualizer" pkg="ros_visualizer" type="ros_visualizer_node"/>
+    <node name="radar_simu" pkg="ros_radar" type="ros_radar_node" args="../../../../function_3-Radar/radar_dump.txt" cwd="node"/>
+</launch>

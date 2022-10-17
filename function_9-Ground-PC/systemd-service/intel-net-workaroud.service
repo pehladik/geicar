@@ -1,0 +1,14 @@
+[Unit]
+Description=Apply a patch on ETH interface
+DefaultDependencies=no
+After=network-online.target
+Wants=network-online.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/intel-net-workaround.sh
+RemainAfterExit=true
+TimeoutStartSec=1min

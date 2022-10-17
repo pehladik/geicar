@@ -1,0 +1,6 @@
+add_library(radar_visualizer_lib src/RadarVisualizer.cpp)
+target_include_directories(radar_visualizer_lib PUBLIC include)
+target_link_libraries(radar_visualizer_lib piksel radar_msgs)
+
+add_executable(radar_visualizer Main.cpp)
+target_link_libraries(radar_visualizer radar_visualizer_lib radar_driver)

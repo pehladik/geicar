@@ -1,0 +1,13 @@
+project(ros_radar)
+
+find_package(catkin REQUIRED COMPONENTS
+             roscpp
+             std_msgs
+             radar_ros_msgs)
+
+catkin_package(CATKIN_DEPENDS radar_ros_msgs)
+
+add_executable(ros_radar_node Main.cpp)
+target_link_libraries(ros_radar_node PUBLIC radar_driver ${catkin_LIBRARIES})
+target_include_directories(ros_radar_node PRIVATE ${catkin_INCLUDE_DIRS})
+add_dependencies(ros_radar_node ${catkin_EXPORTED_TARGETS})
